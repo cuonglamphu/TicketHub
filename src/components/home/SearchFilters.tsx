@@ -143,7 +143,7 @@ export function SearchFilters({
           value={date}
           onChange={(e) => onDateChange(e.target.value)}
           className={`
-            min-w-[180px] h-[52px]
+            flex-grow min-w-[180px] h-[52px]
             bg-white/90 backdrop-blur-sm
             text-black
             transition-all duration-300

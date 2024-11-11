@@ -100,11 +100,11 @@ export function HotEventCarousel({ events, onBuyTickets }: { events: typeof hotE
                   quality={100}
                 />
               </div>
-              <div className="md:w-2/5 h-[50%] md:h-full p-4 flex flex-col justify-center">
+              <div className="md:w-2/5 h-[50%] md:h-full p-4 flex flex-col justify-center  py-8">
                 <h2 className="text-xl md:text-2xl lg:text-5xl font-bold mb-2 text-[#FFEB3B]" style={pixelFont}>{event.name}</h2>
                 <p className="text-sm md:text-base text-white mb-4 text-xl" style={pixelFont}>{event.description}</p>
                 <p className="text-sm md:text-base text-[#FFEB3B] mb-4 text-xl" style={pixelFont}>{event.date}</p>
-                  <Button onClick={() => handleBuyTickets(event)} className={`${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835] self-start text-xl`} style={pixelFont}>
+                  <Button onClick={() => handleBuyTickets(event)} className={`${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835] self-start text-xl mb-2 `} style={pixelFont}>
                   Get Tickets
                 </Button>
               </div>
