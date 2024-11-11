@@ -1,11 +1,10 @@
-import { useEffect, TouchEvent, useRef } from "react"
+import { useEffect, TouchEvent, useRef, useState } from "react"
 import Image from 'next/image' 
-import { useState } from "react"
-import { hotEvents } from '@/data/mock'
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { TicketPurchaseModal } from "@/components/modals/TicketPurchaseModal"
 import { RecommendedEvent } from "@/types/event"
+import { hotEvents } from "@/data/mock"
 const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]"
 const pixelFont = { fontFamily: "'Pixelify Sans', sans-serif" }
 
@@ -17,7 +16,22 @@ export function HotEventCarousel({ events, onBuyTickets }: { events: typeof hotE
     const [touchStart, setTouchStart] = useState<number | null>(null)
     const [touchEnd, setTouchEnd] = useState<number | null>(null)
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const [isMobile, setIsMobile] = useState(false)
 
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768)
+        }
+        
+        // Set initial value
+        handleResize()
+        
+        // Add event listener
+        window.addEventListener('resize', handleResize)
+        
+        // Cleanup
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
 
     const nextSlide = () => {
       setCurrentSlide((prev) => (prev + 1) % events.length)
@@ -89,19 +103,34 @@ export function HotEventCarousel({ events, onBuyTickets }: { events: typeof hotE
               index === currentSlide ? 'opacity-100' : 'opacity-0'
             }`}
           >
-            <div className="flex flex-col md:flex-row h-full">
-              <div className="md:w-3/5 h-[50%] md:h-full">
+            <div className="flex flex-col md:flex-row h-full relative">
+              <div className="md:w-3/5 h-[100%] w-full md:h-full">
                 <Image
                   src={event.image}
                   alt={event.name}
                   width={500}
                   height={500}
-                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                  className={`
+                    w-full h-full object-contain md:object-cover transition-transform duration-300 hover:scale-105
+                    ${isMobile ? 'object-fill' : ''}
+                  `}
                   quality={100}
                 />
+                <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-4 md:hidden">
+                  <h2 className="text-xl font-bold mb-2 text-[#FFEB3B]" style={pixelFont}>{event.name}</h2>
+                  <p className="text-sm text-white mb-2" style={pixelFont}>{event.description}</p>
+                  <p className="text-sm text-[#FFEB3B] mb-2" style={pixelFont}>{event.date}</p>
+                  <Button 
+                    onClick={() => handleBuyTickets(event)} 
+                    className={`${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835] w-full text-xl`} 
+                    style={pixelFont}
+                  >
+                    Get Tickets
+                  </Button>
+                </div>
               </div>
-              <div className="md:w-2/5 h-[50%] md:h-full p-4 flex flex-col justify-center  py-8">
-                <h2 className="text-xl md:text-2xl lg:text-5xl font-bold mb-2 text-[#FFEB3B]" style={pixelFont}>{event.name}</h2>
+              <div className="md:w-2/5 h-[50%] md:h-full p-4 flex flex-col justify-center py-8 hidden md:flex">
+                <h2 className="text-xl md:text-2xl lg:text-5xl font-bold mb-2 text-[#FFEB3B] " style={pixelFont}>{event.name}</h2>
                 <p className="text-sm md:text-base text-white mb-4 text-xl" style={pixelFont}>{event.description}</p>
                 <p className="text-sm md:text-base text-[#FFEB3B] mb-4 text-xl" style={pixelFont}>{event.date}</p>
                   <Button onClick={() => handleBuyTickets(event)} className={`${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835] self-start text-xl mb-2 `} style={pixelFont}>

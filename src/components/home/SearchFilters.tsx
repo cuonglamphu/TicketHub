@@ -141,6 +141,7 @@ export function SearchFilters({
         <Input
           type="date"
           value={date}
+          placeholder='dd/mm/yyyy'
           onChange={(e) => onDateChange(e.target.value)}
           className={`
             flex-grow min-w-[180px] h-[52px]
