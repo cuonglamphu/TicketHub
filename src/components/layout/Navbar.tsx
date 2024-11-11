@@ -73,10 +73,17 @@ export function Navbar({ onSignInClick, onSignUpClick, onSignOutClick }: NavbarP
               </DropdownMenu></>
               ) : (
                 <>
+      
+                 <Button onClick={onSignInClick} className={`${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835] text-xl hidden md:flex`} style={pixelFont}>
+                    Sign In
+                  </Button>
               <Button onClick={onSignUpClick} className={`${pixelBorder} bg-[#F44336] text-white hover:bg-[#D32F2F] text-xl`} style={pixelFont}>
                     Sign Up
                   </Button>
+               
+
                 </>
+                
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
