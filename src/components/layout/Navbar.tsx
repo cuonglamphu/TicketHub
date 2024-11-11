@@ -98,9 +98,13 @@ export function Navbar({ onSignInClick, onSignUpClick, onSignOutClick }: NavbarP
                   <DropdownMenuItem>
                     <Link href="/contact" className="text-white hover:text-[#FFEB3B] text-xl" style={pixelFont}>Contact</Link>
                   </DropdownMenuItem>
-                  <Button onClick={onSignInClick} variant="outline" className={`${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835] `} style={pixelFont}>
-                    Sign In
-                  </Button>
+                  {!user && (
+                    <DropdownMenuItem>
+                      <Button onClick={onSignInClick} variant="outline" className={`${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835] text-xl`} style={pixelFont}>
+                        Sign In
+                      </Button>
+                    </DropdownMenuItem>
+                  )}
                   {user && (
                     <>
                   <DropdownMenuItem>
