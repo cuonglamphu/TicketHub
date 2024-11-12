@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, Music, MapPin, Calendar, DollarSign } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
 const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]";
-const pixelFont = { fontFamily: "'VT323', monospace" };
+const pixelFont = { fontFamily: "'Pixelify Sans', sans-serif" };
 
 // Mock data - replace with real API call
 const events = [
@@ -65,113 +65,145 @@ export default function EventsPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8 text-[#FFEB3B]" style={pixelFont}>
-        Discover Events
-      </h1>
-
-      {/* Search and Filter Section */}
-      <div className={`bg-[#4CAF50] p-6 mb-8 ${pixelBorder}`}>
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Search Bar */}
-          <div className="flex-1">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search events..."
-                className={`w-full px-4 py-2 pr-10 bg-white text-black rounded ${pixelBorder}`}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500" />
-            </div>
-          </div>
-
-          {/* Filter Toggle Button */}
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`px-4 py-2 ${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835] flex items-center gap-2`}
-            style={pixelFont}
-          >
-            <Filter className="w-5 h-5" />
-            Filters
-          </button>
-        </div>
-
-        {/* Filter Options */}
-        {showFilters && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-            {/* Category Filter */}
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className={`px-4 py-2 bg-white text-black rounded ${pixelBorder}`}
-              style={pixelFont}
-            >
-              {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-
-            {/* City Filter */}
-            <select
-              value={selectedCity}
-              onChange={(e) => setSelectedCity(e.target.value)}
-              className={`px-4 py-2 bg-white text-black rounded ${pixelBorder}`}
-              style={pixelFont}
-            >
-              {cities.map(city => (
-                <option key={city} value={city}>{city}</option>
-              ))}
-            </select>
-
-            {/* Price Filter */}
-            <select
-              value={selectedPrice}
-              onChange={(e) => setSelectedPrice(e.target.value)}
-              className={`px-4 py-2 bg-white text-black rounded ${pixelBorder}`}
-              style={pixelFont}
-            >
-              {prices.map(price => (
-                <option key={price} value={price}>{price}</option>
-              ))}
-            </select>
-          </div>
-        )}
+    <div className="min-h-screen bg-gradient-to-b from-[#1a1a1a] to-[#2d2d2d] relative overflow-hidden">
+      {/* Background decorations */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute w-96 h-96 bg-[#4CAF50]/10 rounded-full blur-3xl -top-48 -left-48" />
+        <div className="absolute w-96 h-96 bg-[#FFEB3B]/10 rounded-full blur-3xl -bottom-48 -right-48" />
       </div>
 
-      {/* Events Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {events.map((event) => (
-          <div key={event.id} className={`bg-[#4CAF50] ${pixelBorder} transform transition-all duration-300 hover:scale-105`}>
-            <div className="relative h-60">
-              <Image
-                src={event.image}
-                alt={event.title}
-                fill
-                className="object-fit"
-              />
-            </div>
-            <div className="p-4">
-              <h3 className="text-xl font-bold text-[#FFEB3B] mb-2" style={pixelFont}>
-                {event.title}
-              </h3>
-              <div className="space-y-2 text-white" style={pixelFont}>
-                <p>{event.category}</p>
-                <p>{event.date} at {event.time}</p>
-                <p>{event.location}</p>
-                <p className="text-[#FFEB3B]">${event.price}</p>
-              </div>
-              <Link
-                href={`/events/${event.id}`}
-                className={`block mt-4 text-center py-2 ${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835]`}
-                style={pixelFont}
-              >
-                View Details
-              </Link>
-            </div>
+      {/* Pixel art decorations */}
+      <div className="absolute top-20 right-20 w-20 h-20 animate-bounce">
+        <div className="w-full h-full bg-[#FFEB3B] rotate-45 transform" style={{boxShadow: '4px 4px 0 0 #000000'}} />
+      </div>
+      <div className="absolute bottom-20 left-20 w-16 h-16 animate-pulse">
+        <div className="w-full h-full bg-[#4CAF50] rotate-12 transform" style={{boxShadow: '4px 4px 0 0 #000000'}} />
+      </div>
+
+      <div className="container mx-auto px-4 py-8 relative z-10">
+        {/* Header with decorative elements */}
+        <div className="flex items-center justify-between mb-12">
+          <div className="relative">
+            <h1 className="text-5xl font-bold text-[#FFEB3B] mb-2" style={pixelFont}>
+              Discover Events
+            </h1>
+            <div className="h-2 bg-[#FFEB3B] w-48" style={{boxShadow: '2px 2px 0 0 #000000'}} />
           </div>
-        ))}
+        </div>
+
+        {/* Search and Filter Section with enhanced styling */}
+        <div className={`bg-gradient-to-br from-[#4CAF50] to-[#388E3C] p-6 mb-8 ${pixelBorder}`}>
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search events..."
+                  className={`w-full px-4 py-3 pr-10 bg-white text-black rounded-xl ${pixelBorder} focus:outline-none focus:ring-2 focus:ring-[#FFEB3B]`}
+                  style={pixelFont}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`px-6 py-3 ${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835] flex items-center gap-2 text-lg transition-all hover:shadow-[6px_6px_0_0_#000000]`}
+              style={pixelFont}
+            >
+              <Filter className="w-5 h-5" />
+              Filters
+            </button>
+          </div>
+
+          {showFilters && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+              {[
+                { options: categories, value: selectedCategory, onChange: setSelectedCategory },
+                { options: cities, value: selectedCity, onChange: setSelectedCity },
+                { options: prices, value: selectedPrice, onChange: setSelectedPrice }
+              ].map((filter, index) => (
+                <select
+                  key={index}
+                  value={filter.value}
+                  onChange={(e) => filter.onChange(e.target.value)}
+                  className={`px-4 py-3 bg-white text-black rounded-xl ${pixelBorder} focus:outline-none focus:ring-2 focus:ring-[#FFEB3B] cursor-pointer`}
+                  style={pixelFont}
+                >
+                  {filter.options.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Events Grid with enhanced cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {events.map((event) => (
+            <div 
+              key={event.id} 
+              className={`
+                bg-gradient-to-br from-[#4CAF50] to-[#388E3C] 
+                ${pixelBorder} 
+                transform hover:-translate-y-2 transition-all duration-300
+                hover:shadow-[8px_8px_0_0_#000000]
+              `}
+            >
+              <div className="relative h-60">
+                <Image
+                  src={event.image}
+                  alt={event.title}
+                  fill
+                  className="object-cover"
+                  quality={100}
+                />
+                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#388E3C] to-transparent" />
+              </div>
+              
+              <div className="p-6">
+                <h3 className="text-2xl font-bold text-[#FFEB3B] mb-4" style={pixelFont}>
+                  {event.title}
+                </h3>
+                
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center text-white" style={pixelFont}>
+                    <Music className="mr-3 h-5 w-5 text-[#FFEB3B]" />
+                    {event.category}
+                  </div>
+                  <div className="flex items-center text-white" style={pixelFont}>
+                    <Calendar className="mr-3 h-5 w-5 text-[#FFEB3B]" />
+                    {event.date} at {event.time}
+                  </div>
+                  <div className="flex items-center text-white" style={pixelFont}>
+                    <MapPin className="mr-3 h-5 w-5 text-[#FFEB3B]" />
+                    {event.location}
+                  </div>
+                  <div className="flex items-center text-[#FFEB3B]" style={pixelFont}>
+                    <DollarSign className="mr-3 h-5 w-5" />
+                    {event.price}
+                  </div>
+                </div>
+
+                <Link
+                  href={`/events/${event.id}`}
+                  className={`
+                    block w-full text-center py-3 
+                    ${pixelBorder} bg-[#FFEB3B] text-black 
+                    hover:bg-[#FDD835] text-xl transition-all
+                    hover:shadow-[6px_6px_0_0_#000000]
+                  `}
+                  style={pixelFont}
+                >
+                  View Details
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

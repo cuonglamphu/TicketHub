@@ -105,3 +105,44 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.swiper {
+  width: 100%;
+  padding-top: 20px;
+  padding-bottom: 50px;
+}
+
+/* Cập nhật styles cho Swiper */
+.swiper-slide {
+  opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+.swiper-slide-active {
+  opacity: 1;
+}
+.swiper-slide:hover {
+  z-index: 1;
+}
+
+@media (min-width: 1024px) {
+  .swiper-container {
+    padding: 2rem 0;
+  }
+  
+  .swiper-wrapper {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.swiper-slide-shadow-left,
+.swiper-slide-shadow-right {
+  border-radius: 24px;
+}
+
+.ticket-container {
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
