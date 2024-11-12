@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Pixelify_Sans, VT323 } from 'next/font/google';
+import ChatBot from '@/components/chat/ChatBot';
 
 const vt323 = VT323({
   weight: '400',
@@ -21,13 +22,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en" className={`${vt323.variable} ${pixelify.variable}`}>
       <body>
         {children}
+        <ChatBot />
       </body>
     </html>
   );

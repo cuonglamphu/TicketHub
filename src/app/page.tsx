@@ -13,6 +13,7 @@ import { RecommendedEvents } from '@/components/home/RecommendedEvents'
 import SignInForm from '@/components/home/SignInForm'
 import SignUpForm from '@/components/home/SignUpForm'
 import { getStoredUser } from '@/utils/auth'
+import { CategoryNav } from '@/components/layout/CategoryNav'
 
 
 export default function HomePage() {
@@ -52,6 +53,7 @@ export default function HomePage() {
         localStorage.removeItem('user');
         window.location.reload();
       }} />
+      <CategoryNav />
       <main className="flex-grow">
         <HotEventCarousel events={hotEvents} onBuyTickets={handleBuyTickets}/>
         <div className="container mx-auto px-4 py-8">
