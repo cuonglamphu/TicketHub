@@ -2,53 +2,44 @@
 
 import { useState } from 'react';
 import { DataTable } from '@/components/admin/DataTable';
-import { Button } from '@/components/ui/button';
-import { Users, Plus } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { Card } from "@/components/ui/card";
 import { pixelBorder, pixelFont } from "@/lib/utils";
-
-// Add interface for User type
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  joinDate: string;
-  ticketsBought: number;
-  totalSpent: string;
-}
-
-const sampleUsers = [
-  {
-    id: 1,
-    name: 'John Doe',
-    email: 'john@example.com',
-    role: 'User',
-    joinDate: '2024-01-15',
-    ticketsBought: 5,
-    totalSpent: '$250',
-  },
-  // Add more sample users
-];
-
-type Column<T> = {
-  key: keyof T;
-  label: string;
-  sortable?: boolean;
-};
-
-const columns: Column<User>[] = [
-  { key: 'name', label: 'Name', sortable: true } as const,
-  { key: 'email', label: 'Email', sortable: true } as const,
-  { key: 'role', label: 'Role', sortable: true } as const,
-  { key: 'joinDate', label: 'Join Date', sortable: true } as const,
-  { key: 'ticketsBought', label: 'Tickets', sortable: true } as const,
-  { key: 'totalSpent', label: 'Total Spent', sortable: true } as const,
-];
+import { User } from '@/types/user';
+import { UserForm } from '@/components/admin/UserForm';
 
 export default function UsersPage() {
-  const [, setIsFormOpen] = useState(false);
-  const [, setEditingUser] = useState<User | null>(null);
+  const [isUserFormOpen, setIsUserFormOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+
+  const sampleUsers = [
+    {
+      id: 1,
+      name: 'John Doe',
+      email: 'john@example.com',
+      role: 'User',
+      joinDate: '2024-01-15',
+      ticketsBought: 5,
+      totalSpent: '$250',
+    },
+    // Add more sample users
+  ];
+
+  type Column<T> = {
+    key: keyof T;
+    label: string;
+    sortable?: boolean;
+  };
+
+  const columns: Column<User>[] = [
+    { key: 'name', label: 'Name', sortable: true } as const,
+    { key: 'email', label: 'Email', sortable: true } as const,
+    { key: 'role', label: 'Role', sortable: true } as const,
+    { key: 'joinDate', label: 'Join Date', sortable: true } as const,
+    { key: 'ticketsBought', label: 'Tickets', sortable: true } as const,
+    { key: 'totalSpent', label: 'Total Spent', sortable: true } as const,
+  ];
 
   const stats = [
     { label: 'Total Users', value: '1,234' },
@@ -65,13 +56,6 @@ export default function UsersPage() {
             Users
           </h1>
         </div>
-        <Button
-          onClick={() => setIsFormOpen(true)}
-          className={`${pixelBorder} bg-[#FFEB3B] hover:bg-[#FDD835]`}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add User
-        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -94,12 +78,18 @@ export default function UsersPage() {
         columns={columns}
         data={sampleUsers}
         onEdit={(user) => {
-          setEditingUser(user);
-          setIsFormOpen(true);
+          setSelectedUser(user);
+          setIsUserFormOpen(true);
         }}
         onDelete={(user) => {
           console.log('Delete user:', user);
         }}
+      />
+
+      <UserForm 
+        isOpen={isUserFormOpen}
+        onClose={() => setIsUserFormOpen(false)}
+        user={selectedUser}
       />
     </div>
   );
