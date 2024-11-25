@@ -4,6 +4,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]";
 
+const PROFILE_ITEMS = [
+  { id: 'profile-email', label: 'Email' },
+  { id: 'profile-fullName', label: 'Full Name' },
+  { id: 'profile-phone', label: 'Phone' }
+];
+
+const PASSWORD_ITEMS = [
+  { id: 'password-current', label: 'Current Password' },
+  { id: 'password-new', label: 'New Password' },
+  { id: 'password-confirm', label: 'Confirm Password' }
+];
+
 export default function AccountLoading() {
   return (
     <div className="container mx-auto px-4 py-8">
@@ -13,8 +25,8 @@ export default function AccountLoading() {
         <Skeleton className="h-8 w-48 mb-6 bg-[#FFEB3B]/20" />
         
         <div className="space-y-6">
-          {[1, 2, 3].map((index) => (
-            <div key={index}>
+          {PROFILE_ITEMS.map((item) => (
+            <div key={item.id}>
               <Skeleton className="h-6 w-24 mb-2 bg-[#FFEB3B]/20" />
               <Skeleton className="h-10 w-full bg-[#FFEB3B]/20" />
             </div>
@@ -27,8 +39,8 @@ export default function AccountLoading() {
         <Skeleton className="h-8 w-48 mb-6 bg-[#FFEB3B]/20" />
         
         <div className="space-y-6">
-          {[1, 2, 3].map((index) => (
-            <div key={index}>
+          {PASSWORD_ITEMS.map((item) => (
+            <div key={item.id}>
               <Skeleton className="h-6 w-24 mb-2 bg-[#FFEB3B]/20" />
               <Skeleton className="h-10 w-full bg-[#FFEB3B]/20" />
             </div>

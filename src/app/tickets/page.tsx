@@ -4,78 +4,58 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Image from 'next/image'
-import { Calendar, MapPin, Ticket } from 'lucide-react'
+import { Calendar, MapPin, Ticket, Filter } from 'lucide-react'
 import { getStoredUser } from '@/utils/auth'
 import { useRouter } from 'next/navigation'
 import { TicketDetailsModal } from '@/components/modals/TicketDetailsModal'
-
-interface TicketType {
-  id: string;
-  eventId: string;
-  eventName: string;
-  eventImage: string;
-  eventDate: string;
-  eventTime: string;
-  eventLocation: string;
-  quantity: number;
-  price: number;
-  purchaseDate: string;
-  qrCode: string;
-}
+import { purchaseService } from '@/services/purchaseService'
+import { PurchaseDisplay } from '@/types/purchase'
+import TicketsLoading from './loading'
+import { Skeleton } from "@/components/ui/skeleton"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Search } from 'lucide-react'
+import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 
 const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]"
 const pixelFont = { fontFamily: "'Pixelify Sans', sans-serif" }
 
-// Move mockTickets outside the component
-const mockTickets: TicketType[] = [
-  {
-    id: '1',
-    eventId: '1',
-    eventName: 'Pixel Music Festival',
-    eventImage: 'https://salt.tkbcdn.com/ts/ds/de/fd/9b/8f4fd89066ec3447a0ddd21995e44bf2.png',
-    eventDate: '2024-04-15',
-    eventTime: '19:00',
-    eventLocation: 'Digital Arena',
-    quantity: 2,
-    price: 50,
-    purchaseDate: '2024-03-01',
-    qrCode: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Example'
-  },
-  {
-    id: '2',
-    eventId: '1',
-    eventName: 'Pixel Music Festival',
-    eventImage: 'https://salt.tkbcdn.com/ts/ds/3d/42/7f/2a0ab3db23dffe7893188d2199b63b19.jpg',
-    eventDate: '2024-04-15',
-    eventTime: '19:00',
-    eventLocation: 'Digital Arena',
-    quantity: 2,
-    price: 50,
-    purchaseDate: '2024-03-01',
-    qrCode: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Example'
-  },
-  {
-    id: '3',
-    eventId: '1',
-    eventName: 'Pixel Music Festival',
-    eventImage: 'https://salt.tkbcdn.com/ts/ds/4f/3f/f0/cbd75651ae0c3c8d4c5a0c6a76c2f6d1.jpg',
-    eventDate: '2024-04-15',
-    eventTime: '19:00',
-    eventLocation: 'Digital Arena',
-    quantity: 2,
-    price: 50,
-    purchaseDate: '2024-03-01',
-    qrCode: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Example'
-  },
-  // Add more mock tickets as needed
-];
-
 export default function TicketsPage() {
-  const [tickets, setTickets] = useState<TicketType[]>([])
-  const [selectedTicket, setSelectedTicket] = useState<TicketType | null>(null)
+  const [tickets, setTickets] = useState<PurchaseDisplay[]>([])
+  const [selectedTicket, setSelectedTicket] = useState<PurchaseDisplay | null>(null)
   const [isTicketDetailsModalOpen, setIsTicketDetailsModalOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
-  const [, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterType, setFilterType] = useState('all')
+  const [filterCity, setFilterCity] = useState('all')
+  const [showFilters, setShowFilters] = useState(false)
+
+  useEffect(() => {
+    const fetchTickets = async () => {
+      const user = getStoredUser();
+      if (!user) {
+        router.push('/');
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const salesData = await purchaseService.getUserPurchases(user.userId);
+        const formattedTickets = salesData.flatMap(sale => 
+          purchaseService.formatPurchaseForDisplay(sale)
+        );
+        setTickets(formattedTickets);
+      } catch (error) {
+        console.error('Error fetching tickets:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTickets();
+  }, [router]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -98,18 +78,74 @@ export default function TicketsPage() {
     };
   }, []);
 
-  useEffect(() => {
-    const user = getStoredUser();
-    if (!user) {
-      router.push('/');
-      return;
-    }
-    setTickets(mockTickets);
-  }, [router]);
-
-  const openTicketDetailsModal = (ticket: TicketType) => {
+  const openTicketDetailsModal = (ticket: PurchaseDisplay) => {
     setSelectedTicket(ticket)
     setIsTicketDetailsModalOpen(true)
+  }
+
+  const filteredTickets = tickets.filter(ticket => {
+    const matchesSearch = ticket.eventName.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesType = filterType === 'all' || ticket.ticketType === filterType
+    const matchesCity = filterCity === 'all' || ticket.eventLocation.toLowerCase().includes(filterCity.toLowerCase())
+
+    return matchesSearch && matchesType && matchesCity
+  })
+
+  const uniqueTicketTypes = Array.from(new Set(tickets.map(ticket => ticket.ticketType)))
+  const uniqueCities = Array.from(new Set(tickets.map(ticket => {
+    const city = ticket.eventLocation.split(',')[0].trim()
+    return city
+  })))
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#1a1a1a] to-[#2d2d2d] relative overflow-hidden">
+        {/* Keep the background decorations */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute w-64 h-64 bg-[#4CAF50]/20 rounded-full blur-3xl -top-32 -left-32" />
+          <div className="absolute w-64 h-64 bg-[#FFEB3B]/20 rounded-full blur-3xl -bottom-32 -right-32" />
+        </div>
+
+        <div className="container mx-auto px-4 py-8 relative z-10">
+          {/* Header skeleton */}
+          <div className="flex items-center justify-between mb-12">
+            <div className="relative">
+              <Skeleton className="h-12 w-48 bg-gray-700 mb-2" />
+              <Skeleton className="h-2 w-32 bg-gray-700" />
+            </div>
+            <div className="hidden md:block">
+              <Skeleton className="h-8 w-32 bg-gray-700" />
+            </div>
+          </div>
+
+          {/* Tickets grid skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3, 4, 5, 6].map((index) => (
+              <div 
+                key={index}
+                className={`
+                  bg-gray-800 rounded-lg ${pixelBorder}
+                  transform transition-all duration-300
+                `}
+              >
+                <Skeleton className="w-full h-48 bg-gray-700" />
+                <div className="p-6">
+                  <Skeleton className="h-8 w-3/4 bg-gray-700 mb-4" />
+                  <div className="space-y-3">
+                    <Skeleton className="h-6 w-full bg-gray-700" />
+                    <Skeleton className="h-6 w-full bg-gray-700" />
+                    <Skeleton className="h-6 w-full bg-gray-700" />
+                  </div>
+                </div>
+                <div className="p-6 pt-0">
+                  <Skeleton className="h-12 w-full bg-gray-700" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -144,67 +180,133 @@ export default function TicketsPage() {
           </div>
         </div>
 
-        {/* Tickets grid with enhanced styling */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {tickets.map((ticket) => (
-            <Card 
-              key={ticket.id} 
-              className={`
-                bg-gradient-to-br from-[#4CAF50] to-[#388E3C] 
-                ${pixelBorder} 
-                transform hover:-translate-y-2 transition-all duration-300
-                hover:shadow-[8px_8px_0_0_#000000]
-              `}
-            >
+        {/* Search and Filter Section */}
+        <div className={`bg-gradient-to-br from-[#4CAF50] to-[#388E3C] p-6 mb-8 ${pixelBorder}`}>
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
               <div className="relative">
-                <Image 
-                  src={ticket.eventImage} 
-                  alt={ticket.eventName} 
-                  width={500}
-                  height={500}
-                  className="w-full h-48 object-cover" 
-                  quality={100}
-                />
-                <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#388E3C] to-transparent" />
-              </div>
-
-              <CardContent className="p-6">
-                <h3 className="text-2xl font-bold mb-4 text-[#FFEB3B]" style={pixelFont}>
-                  {ticket.eventName}
-                </h3>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center text-white text-lg" style={pixelFont}>
-                    <Calendar className="mr-3 h-5 w-5 text-[#FFEB3B]" />
-                    {ticket.eventDate} at {ticket.eventTime}
-                  </div>
-                  <div className="flex items-center text-white text-lg" style={pixelFont}>
-                    <MapPin className="mr-3 h-5 w-5 text-[#FFEB3B]" />
-                    {ticket.eventLocation}
-                  </div>
-                  <div className="flex items-center text-white text-lg" style={pixelFont}>
-                    <Ticket className="mr-3 h-5 w-5 text-[#FFEB3B]" />
-                    Quantity: {ticket.quantity}
-                  </div>
-                </div>
-              </CardContent>
-
-              <CardFooter className="p-6 pt-0">
-                <Button 
-                  onClick={() => openTicketDetailsModal(ticket)}
-                  className={`
-                    w-full ${pixelBorder} bg-[#FFEB3B] text-black 
-                    hover:bg-[#FDD835] text-xl transition-all
-                    hover:shadow-[6px_6px_0_0_#000000]
-                  `}
+                <input
+                  type="text"
+                  placeholder="Search tickets..."
+                  className={`w-full px-4 py-3 pr-10 bg-white text-black rounded-xl ${pixelBorder}`}
                   style={pixelFont}
-                >
-                  View Ticket Details
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`px-6 py-3 ${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835]`}
+              style={pixelFont}
+            >
+              <Filter className="w-5 h-5 inline-block mr-2" />
+              Filters
+            </button>
+          </div>
+
+          {showFilters && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className={`px-4 py-3 bg-white text-black rounded-xl ${pixelBorder}`}
+                style={pixelFont}
+              >
+                <option value="all">All Types</option>
+                {uniqueTicketTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+              
+              <select
+                value={filterCity}
+                onChange={(e) => setFilterCity(e.target.value)}
+                className={`px-4 py-3 bg-white text-black rounded-xl ${pixelBorder}`}
+                style={pixelFont}
+              >
+                <option value="all">All Cities</option>
+                {uniqueCities.map(city => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
+
+        {filteredTickets.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredTickets.map((ticket) => (
+              <Card 
+                key={`${ticket.id}-${ticket.eventName}-${ticket.quantity}`}
+                className={`
+                  bg-gradient-to-br from-[#4CAF50] to-[#388E3C] 
+                  ${pixelBorder} 
+                  transform hover:-translate-y-2 transition-all duration-300
+                  hover:shadow-[8px_8px_0_0_#000000]
+                `}
+              >
+                <div className="relative">
+                  <ImageWithFallback   
+                    src={ticket.eventThumb} 
+                    alt={ticket.eventName} 
+                    width={500}
+                    height={500}
+                    className="w-full h-48 object-cover" 
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#388E3C] to-transparent" />
+                </div>
+
+                <CardContent className="p-6">
+                  <h3 className="text-2xl font-bold mb-4 text-[#FFEB3B]" style={pixelFont}>
+                    {ticket.eventName}
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center text-white text-lg" style={pixelFont}>
+                      <Calendar className="mr-3 h-5 w-5 text-[#FFEB3B]" />
+                      {ticket.eventDate} at {ticket.eventTime}
+                    </div>
+                    <div className="flex items-center text-white text-lg" style={pixelFont}>
+                      <MapPin className="mr-3 h-5 w-5 text-[#FFEB3B]" />
+                      {ticket.eventLocation}
+                    </div>
+                    <div className="flex items-center text-white text-lg" style={pixelFont}>
+                      <Ticket className="mr-3 h-5 w-5 text-[#FFEB3B]" />
+                      Quantity: {ticket.quantity}
+                    </div>
+                  </div>
+                </CardContent>
+
+                <CardFooter className="p-6 pt-0">
+                  <Button 
+                    onClick={() => openTicketDetailsModal(ticket)}
+                    className={`
+                      w-full ${pixelBorder} bg-[#FFEB3B] text-black 
+                      hover:bg-[#FDD835] text-xl transition-all
+                      hover:shadow-[6px_6px_0_0_#000000]
+                      disabled:opacity-50 disabled:cursor-not-allowed
+                    `}
+                    style={pixelFont}
+                  >
+                    View Ticket Details
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <h3 className="text-2xl text-[#FFEB3B]" style={pixelFont}>
+              No tickets found
+            </h3>
+            <p className="text-white mt-2" style={pixelFont}>
+              Try adjusting your search or filter criteria
+            </p>
+          </div>
+        )}
       </div>
 
       <TicketDetailsModal

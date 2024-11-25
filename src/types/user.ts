@@ -1,11 +1,15 @@
 export interface User {
-  id?: number;
-  name: string;
-  email: string;
-  role: string;
-  joinDate?: string;
-  ticketsBought?: number;
-  totalSpent?: string;
+  userId: number;
+  userName: string;
+  firstName: string;
+  lastName: string;
+  userEmail: string;
+  userRole: string;
+  userJoinDate: string;
+  totalTickets: number;
+  totalSpent: number;
+  status: string;
+  message: string;
 }
 
 export type UserFormProps = {

@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { notFound } from 'next/navigation';
+import { getStoredUser } from '@/utils/auth';
 import { pixelBorder, pixelFont } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Bar, Doughnut } from 'react-chartjs-2';
@@ -59,7 +61,7 @@ export default function AdminDashboard() {
   const stats = [
     { 
       name: 'Total Sales', 
-      value: '$12,345',
+      value: '12,000.000.000đ',
       trend: '+12.5%',
       icon: DollarSign,
       isPositive: true,
@@ -100,7 +102,7 @@ export default function AdminDashboard() {
   const handleAiAnalysis = async () => {
     setIsAnalyzing(true);
     setTimeout(() => {
-      setAiResponse(`Based on current trends and your target of $${targetRevenue}:
+      setAiResponse(`Based on current trends and your target of ${targetRevenue}đ:
       1. Increase marketing for Tech Workshop events
       2. Consider dynamic pricing during peak hours (6-8 PM)
       3. Focus on user retention strategies
@@ -185,6 +187,13 @@ export default function AdminDashboard() {
     cutout: '70%',
     radius: '90%'
   };
+
+  useEffect(() => {
+    const user = getStoredUser();
+    if (!user || user.userRole !== 'admin') {
+      notFound();
+    }
+  }, []);
 
   return (
     <div className="space-y-6">

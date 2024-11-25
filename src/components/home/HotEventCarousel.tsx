@@ -1,173 +1,194 @@
-import { useEffect, TouchEvent, useRef, useState } from "react"
-import Image from 'next/image' 
+import { useState, useEffect, useCallback } from "react"
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { TicketPurchaseModal } from "@/components/modals/TicketPurchaseModal"
 import { RecommendedEvent } from "@/types/event"
-import { hotEvents } from "@/data/mock"
-const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]"
-const pixelFont = { fontFamily: "'Pixelify Sans', sans-serif" }
+import { HotEventCarouselSkeleton } from "./HotEventCarouselSkeleton"
 
-
-
-export function HotEventCarousel({ events, onBuyTickets }: { events: typeof hotEvents, onBuyTickets: (event: RecommendedEvent) => void }) {
-    const [isTicketPurchaseOpen, setIsTicketPurchaseOpen] = useState(false)
+export function HotEventCarousel({ events }: { events: RecommendedEvent[] }) {
     const [currentSlide, setCurrentSlide] = useState(0)
-    const [touchStart, setTouchStart] = useState<number | null>(null)
-    const [touchEnd, setTouchEnd] = useState<number | null>(null)
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const [isMobile, setIsMobile] = useState(false)
+    const [isAnimating, setIsAnimating] = useState(false)
+    const [isPaused, setIsPaused] = useState(false)
+    const router = useRouter()
+    
+    const changeSlide = useCallback((direction: 'next' | 'prev' | number) => {
+        if (isAnimating) return
+        setIsAnimating(true)
+        
+        if (typeof direction === 'number') {
+            setCurrentSlide(direction)
+        } else {
+            setCurrentSlide(prev => {
+                if (direction === 'next') {
+                    return (prev + 1) % events.length
+                }
+                return (prev - 1 + events.length) % events.length
+            })
+        }
+        
+        setTimeout(() => setIsAnimating(false), 500)
+    }, [isAnimating, events.length])
 
+    // Auto-slide effect
     useEffect(() => {
-        const handleResize = () => {
-            setIsMobile(window.innerWidth < 768)
+        if (!isPaused && events.length > 1) {
+            const timer = setInterval(() => {
+                changeSlide('next')
+            }, 5000)
+
+            return () => clearInterval(timer)
         }
-        
-        // Set initial value
-        handleResize()
-        
-        // Add event listener
-        window.addEventListener('resize', handleResize)
-        
-        // Cleanup
-        return () => window.removeEventListener('resize', handleResize)
-    }, [])
+    }, [isPaused, changeSlide, events.length])
 
-    const nextSlide = () => {
-      setCurrentSlide((prev) => (prev + 1) % events.length)
-    }
-  
-    const prevSlide = () => {
-      setCurrentSlide((prev) => (prev - 1 + events.length) % events.length)
-    }
-  
-    // Add function to start carousel
-    const startCarousel = () => {
-        timerRef.current = setInterval(nextSlide, 5000);
-    };
-
-    // Add function to stop carousel
-    const stopCarousel = () => {
-        if (timerRef.current) {
-            clearInterval(timerRef.current);
-        }
-    };
-
-    useEffect(() => {
-        startCarousel();
-        return () => stopCarousel();
-    }, );
-  
-    const handleTouchStart = (e: TouchEvent) => {
-        setTouchStart(e.targetTouches[0].clientX)
+    if (!events || events.length === 0) {
+        return <HotEventCarouselSkeleton />
     }
 
-    const handleTouchMove = (e: TouchEvent) => {
-        setTouchEnd(e.targetTouches[0].clientX)
+    const currentEvent = events[currentSlide]
+
+    const nextSlide = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        changeSlide('next')
     }
 
-    const handleTouchEnd = () => {
-        if (!touchStart || !touchEnd) return
-        
-        const distance = touchStart - touchEnd
-        const minSwipeDistance = 50
-
-        if (Math.abs(distance) >= minSwipeDistance) {
-            if (distance > 0) {
-                nextSlide()
-            } else {
-                prevSlide()
-            }
-        }
-
-        setTouchStart(null)
-        setTouchEnd(null)
+    const prevSlide = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        changeSlide('prev')
     }
 
-    const handleBuyTickets = (event: RecommendedEvent) => {
-        stopCarousel();
-        onBuyTickets(event);
+    const navigateToDetail = () => {
+        router.push(`/events/${currentEvent.eveId}`)
     }
-  
+
     return (
-      <div 
-        className={`my-4 mx-auto max-w-[90%] md:max-w-[85%] relative overflow-hidden h-[400px] md:h-[500px] ${pixelBorder} bg-[#4CAF50]`}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        {events.map((event, index) => (
-          <div
-            key={event.id}
-            className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ${
-              index === currentSlide ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            <div className="flex flex-col md:flex-row h-full relative">
-              <div className="md:w-3/5 h-[100%] w-full md:h-full">
-                <Image
-                  src={event.image}
-                  alt={event.name}
-                  width={500}
-                  height={500}
-                  className={`
-                    w-full h-full object-contain md:object-cover transition-transform duration-300 hover:scale-105
-                    ${isMobile ? 'object-fill' : ''}
-                  `}
-                  quality={100}
-                />
-                <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-4 md:hidden">
-                  <h2 className="text-xl font-bold mb-2 text-[#FFEB3B]" style={pixelFont}>{event.name}</h2>
-                  <p className="text-sm text-white mb-2" style={pixelFont}>{event.description}</p>
-                  <p className="text-sm text-[#FFEB3B] mb-2" style={pixelFont}>{event.date}</p>
-                  <Button 
-                    onClick={() => handleBuyTickets(event)} 
-                    className={`${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835] w-full text-xl`} 
-                    style={pixelFont}
-                  >
-                    Get Tickets
-                  </Button>
+        <div className="relative w-full max-w-[1400px] mx-auto px-4 my-8">
+            <div className="relative h-[400px] md:h-[500px] rounded-xl overflow-hidden
+                          shadow-[0_0_20px_rgba(0,0,0,0.3)]
+                          transform transition-all duration-500 hover:shadow-[0_0_30px_rgba(0,0,0,0.5)]"
+                 onMouseEnter={() => setIsPaused(true)}
+                 onMouseLeave={() => setIsPaused(false)}>
+                {/* Main Content Container */}
+                <div className="flex h-full cursor-pointer relative" 
+                     onClick={navigateToDetail}>
+                    {/* Background Gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#4CAF50] to-[#45a049] opacity-75" />
+
+                    {/* Image Section */}
+                    <div className="w-full h-full relative overflow-hidden group">
+                        <Image
+                            src={currentEvent.eveThumb || '/default-image.jpg'}
+                            alt={currentEvent.eveName}
+                            fill
+                            className={`object-cover transform transition-all duration-700 ease-out
+                                    group-hover:scale-110 ${isAnimating ? 'animate-slideChange' : ''}`}
+                            priority
+                            quality={100}
+                        />
+                        
+                        {/* Content Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                        
+                        {/* Content */}
+                        <div className="absolute bottom-0 left-0 right-0 p-8 transform transition-all duration-500
+                                      group-hover:translate-y-[-10px]">
+                            {/* Progress Bar */}
+                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
+                                <div className={`h-full bg-[#FFEB3B] transition-all duration-300
+                                              ${isPaused ? 'w-0' : 'animate-progress'}`} />
+                            </div>
+
+                            <div className="mb-4">
+                                <span className="px-4 py-2 bg-[#FFEB3B] text-black rounded-full text-sm font-bold
+                                               transform transition-all duration-300 hover:scale-105">
+                                    {currentEvent.category?.catName || 'Event'}
+                                </span>
+                            </div>
+
+                            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4
+                                         transform transition-all duration-300"
+                                style={{ fontFamily: "'Pixelify Sans', sans-serif" }}>
+                                {currentEvent.eveName}
+                            </h2>
+                            
+                            <p className="text-lg text-gray-200 mb-6 max-w-2xl
+                                        transform transition-all duration-300">
+                                {currentEvent.eveDesc}
+                            </p>
+
+                            <div className="flex items-center gap-6">
+                                <div className="text-[#FFEB3B] text-xl"
+                                     style={{ fontFamily: "'Press Start 2P', cursive" }}>
+                                    {new Date(currentEvent.eveTimestart).toLocaleDateString()}
+                                </div>
+                                
+                                <div className="group/btn inline-flex items-center gap-2 
+                                              text-[#FFEB3B] font-bold cursor-pointer">
+                                    <span className="transform transition-all duration-300 
+                                                   group-hover/btn:translate-x-2">
+                                        View Details
+                                    </span>
+                                    <span className="transform transition-all duration-300 
+                                                   group-hover/btn:translate-x-4">
+                                        →
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
-              <div className="md:w-2/5 h-[50%] md:h-full p-4 flex flex-col justify-center py-8 hidden md:flex">
-                <h2 className="text-xl md:text-2xl lg:text-5xl font-bold mb-2 text-[#FFEB3B] " style={pixelFont}>{event.name}</h2>
-                <p className="text-sm md:text-base text-white mb-4 text-xl" style={pixelFont}>{event.description}</p>
-                <p className="text-sm md:text-base text-[#FFEB3B] mb-4 text-xl" style={pixelFont}>{event.date}</p>
-                  <Button onClick={() => handleBuyTickets(event)} className={`${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835] self-start text-xl mb-2 `} style={pixelFont}>
-                  Get Tickets
-                </Button>
-              </div>
+
+                {/* Navigation Buttons */}
+                <button
+                    onClick={prevSlide}
+                    disabled={isAnimating}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 
+                             bg-[#FFEB3B] text-black p-3 rounded-full
+                             transform transition-all duration-300
+                             hover:scale-110 hover:bg-white
+                             opacity-0 hover:opacity-100
+                             disabled:opacity-50 disabled:cursor-not-allowed
+                             z-20"
+                >
+                    <ChevronLeft className="h-6 w-6" />
+                </button>
+                <button
+                    onClick={nextSlide}
+                    disabled={isAnimating}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 
+                             bg-[#FFEB3B] text-black p-3 rounded-full
+                             transform transition-all duration-300
+                             hover:scale-110 hover:bg-white
+                             opacity-0 hover:opacity-100
+                             disabled:opacity-50 disabled:cursor-not-allowed
+                             z-20"
+                >
+                    <ChevronRight className="h-6 w-6" />
+                </button>
+
+                {/* Dots Indicator */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3 z-20">
+                    {events.map((_, index) => (
+                        <button
+                            key={index}
+                            disabled={isAnimating}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                if (!isAnimating) {
+                                    setIsAnimating(true)
+                                    setCurrentSlide(index)
+                                    setTimeout(() => setIsAnimating(false), 500)
+                                }
+                            }}
+                            className={`w-2 h-2 rounded-full transition-all duration-300 
+                                ${currentSlide === index 
+                                    ? 'w-8 bg-[#FFEB3B]' 
+                                    : 'bg-white/50 hover:bg-white'}
+                                ${isAnimating ? 'cursor-not-allowed' : ''}`}
+                        />
+                    ))}
+                </div>
             </div>
-            <TicketPurchaseModal
-              event={event} 
-              isOpen={isTicketPurchaseOpen}
-              onClose={() => {
-                  setIsTicketPurchaseOpen(false);
-                  startCarousel(); // Restart carousel when modal closes
-              }}
-            />
-          </div>
-        ))}
-        <Button
-          variant="outline"
-          size="icon"
-          className={`hidden md:flex absolute top-1/2 left-2 -translate-y-1/2 ${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835] z-10`}
-          onClick={prevSlide}
-        >
-          <ChevronLeft className="h-6 w-6" />
-          <span className="sr-only">Previous event</span>
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className={`hidden md:flex absolute top-1/2 right-2 -translate-y-1/2 ${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835] z-10`}
-          onClick={nextSlide}
-        >
-          <ChevronRight className="h-6 w-6" />
-          <span className="sr-only">Next event</span>
-        </Button>
-        
-      </div>
-      
+        </div>
     )
-  }
+}

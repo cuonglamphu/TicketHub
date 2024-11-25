@@ -1,19 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { use } from 'react';
+import { useState, useEffect, use } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Calendar, MapPin } from 'lucide-react';
-
-interface Event {
-  id: number;
-  title: string;
-  date: string;
-  location: string;
-  description: string;
-  image: string;
-}
+import { Event } from '@/types/event';
+import { eventService } from '@/services/eventService';
+import { categoryService } from '@/services/categoryService';
+import { toast } from 'sonner';
 
 const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]";
 const pixelFont = { fontFamily: "'VT323', monospace" };
@@ -21,51 +15,85 @@ const pixelFont = { fontFamily: "'VT323', monospace" };
 export default function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = use(params);
   const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [categoryName, setCategoryName] = useState('');
 
   useEffect(() => {
-    // Mock data - replace with API call
-    setEvents([
-      {
-        id: 1,
-        title: 'Summer Music Festival',
-        date: '2024-06-15',
-        location: 'Central Park',
-        description: 'A day of amazing music performances',
-        image: 'https://salt.tkbcdn.com/ts/ds/5d/3b/5c/006fb1fd95e2d66dcf737569f6be23c9.jpg'
-      },
-      // Add more events...
-    ]);
+    fetchCategoryEvents();
   }, [resolvedParams.slug]);
+
+  const fetchCategoryEvents = async () => {
+    try {
+      setLoading(true);
+      const category = await categoryService.getBySlug(resolvedParams.slug);
+      if (category) {
+        setCategoryName(category.catName);
+        const eventsData = await eventService.getByCategory(category.catId);
+        setEvents(eventsData);
+      }
+    } catch (error) {
+      console.error('Error fetching category events:', error);
+      toast.error('Failed to load events');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className={`bg-[#4CAF50] ${pixelBorder} animate-pulse`}>
+              <div className="w-full h-48 bg-[#388E3C]" />
+              <div className="p-4 space-y-3">
+                <div className="h-6 bg-[#388E3C] rounded w-3/4" />
+                <div className="h-4 bg-[#388E3C] rounded w-1/2" />
+                <div className="h-4 bg-[#388E3C] rounded w-2/3" />
+                <div className="h-10 bg-[#388E3C] rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <h1 className="text-4xl font-bold text-[#FFEB3B] mb-8" style={pixelFont}>
+        {categoryName} Events
+      </h1>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {events.map((event) => (
           <div 
-            key={event.id} 
+            key={event.eveId} 
             className={`bg-[#4CAF50] ${pixelBorder}`}
           >
-            <Image
-              src={event.image}
-              alt={event.title}
-              width={500}
-              height={300}
-              className="w-full h-48 object-cover"
-            />
+            <div className="relative h-48">
+              <Image
+                src={event.eveThumb}
+                alt={event.eveName}
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            </div>
             <div className="p-4">
               <h3 className="text-xl font-semibold mb-2 text-[#FFEB3B]" style={pixelFont}>
-                {event.title}
+                {event.eveName}
               </h3>
               <div className="flex items-center text-white mb-1" style={pixelFont}>
                 <Calendar className="mr-2 h-4 w-4" />
-                {event.date}
+                {new Date(event.eveTimestart).toLocaleDateString()}
               </div>
               <div className="flex items-center text-white mb-2" style={pixelFont}>
                 <MapPin className="mr-2 h-4 w-4" />
-                {event.location}
+                {event.eveCity}
               </div>
               <Link 
-                href={`/events/${event.id}`}
+                href={`/events/${event.eveId}`}
                 className={`inline-block w-full text-center py-2 ${pixelBorder} 
                   bg-[#FFEB3B] text-black hover:bg-[#FDD835]`}
                 style={pixelFont}

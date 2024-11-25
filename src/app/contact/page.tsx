@@ -2,6 +2,7 @@
 
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
 import { useState } from 'react';
+import Image from 'next/image';
 const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]";
 const pixelFont = { fontFamily: "'VT323', monospace" };
 

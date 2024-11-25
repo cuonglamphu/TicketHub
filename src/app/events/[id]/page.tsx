@@ -7,60 +7,87 @@ import { getStoredUser } from '@/utils/auth';
 import { Modal } from "@/components/modals/Modal";
 import SignInForm from '@/components/home/SignInForm';
 import { TicketPurchaseModal } from "@/components/modals/TicketPurchaseModal";
+import { eventService } from '@/services/eventService';
+import { TicketDisplay, Ticket as TicketType, Type } from '@/types/ticket';
+import { ticketService } from '@/services/ticketService';
+import { typeService } from '@/services/typeService';
+import { Event } from '@/types/event';
+import { toast } from 'sonner';
+import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 
 const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]";
 const pixelFont = { fontFamily: "'VT323', monospace" };
 
-interface Event {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  time: string;
-  location: string;
-  price: number;
-  category: string;
-  mainImage: string;
-  galleryImages: string[];
-  organizer: {
-    name: string;
-    image: string;
-    description: string;
-  };
-}
-
 export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
-    const resolvedParams = use(params);
+  const resolvedParams = use(params);
   const [event, setEvent] = useState<Event | null>(null);
   const [isSignInOpen, setIsSignInOpen] = useState(false);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState('');
   const [isLiked, setIsLiked] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [ticketDisplays, setTicketDisplays] = useState<TicketDisplay[]>([]);
 
   useEffect(() => {
-    // Mock data 
-    setEvent({
-      id: resolvedParams.id,
-      title: "Summer Music Festival 2024",
-      description: "Join us for an unforgettable summer music festival featuring top artists from around the world. Experience amazing performances, great food, and incredible atmosphere! Join us for an unforgettable summer music festival featuring top artists from around the world. Experience amazing performances, great food, and incredible atmosphere!",
-      date: "2024-07-15",
-      time: "18:00",
-      location: "Central Park, Ho Chi Minh City",
-      price: 50,
-      category: "Music",
-      mainImage: "https://salt.tkbcdn.com/ts/ds/de/fd/9b/8f4fd89066ec3447a0ddd21995e44bf2.png",
-      galleryImages: [
-        "https://salt.tkbcdn.com/ts/ds/3d/42/7f/2a0ab3db23dffe7893188d2199b63b19.jpg",
-        "https://salt.tkbcdn.com/ts/ds/de/fd/9b/8f4fd89066ec3447a0ddd21995e44bf2.png",
-        "https://salt.tkbcdn.com/ts/ds/ab/c3/34/a0da8994fb4ab5117ae208039cd261ae.png"
-      ],
-      organizer: {
-        name: "PixelTix Events",
-        image: "https://salt.tkbcdn.com/ts/ds/7d/fc/85/481ef3de9970b4bf4abe2a23e32da2ba.png",
-        description: "Leading event organizer with 10+ years of experience"
-      }
-    });
+    console.log(resolvedParams.id)
+    if (resolvedParams.id) {
+      fetchEventData();
+      fetchTicketData();
+    }
   }, [resolvedParams.id]);
+
+  const fetchEventData = async () => {
+    try {
+      setLoading(true);
+      const eventData = await eventService.getById(Number(resolvedParams.id));
+      setEvent(eventData);
+    } catch (error) {
+      console.error('Error fetching event:', error);
+      toast.error('Failed to load event details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTicketData = async () => {
+    try {
+      const tickets: TicketType[] = await ticketService.getByEventId(Number(resolvedParams.id));
+      console.log("Fetched tickets:", tickets);
+
+      const typeMap = new Map<number, Type>();
+      
+      for (const ticket of tickets) {
+        console.log("Processing ticket:", ticket);
+        console.log("TypeId:", ticket.TypeId, "typeId:", ticket.typeId); // Check both cases
+        
+        const typeId = ticket.TypeId || ticket.typeId; // Handle both cases
+        if (!typeMap.has(typeId)) {
+          const typeInfo = await typeService.getById(typeId);
+          console.log("Type info for", typeId, ":", typeInfo);
+          typeMap.set(typeId, typeInfo);
+        }
+      }
+
+      const displays: TicketDisplay[] = tickets.map(ticket => {
+        const typeId = ticket.TypeId || ticket.typeId;
+        const typeInfo = typeMap.get(typeId);
+        console.log("Creating display for ticket:", ticket);
+        console.log("Type info found:", typeInfo);
+        
+        return {
+          ticketId: ticket.TicketId || ticket.ticketId,
+          name: typeInfo?.typeName || 'Unknown',
+          price: ticket.TicketPrice || ticket.ticketPrice || 0,
+          quantity: ticket.TicketQty || ticket.ticketQty || 0
+        };
+      });
+
+      console.log("Final displays:", displays);
+      setTicketDisplays(displays);
+    } catch (error) {
+      console.error('Error fetching ticket data:', error);
+      toast.error('Failed to load ticket information');
+    }
+  };
 
   const handleBuyTickets = () => {
     const user = getStoredUser();
@@ -71,6 +98,10 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
     setIsTicketModalOpen(true);
   };
 
+  if (loading) {
+    return <div>Loading...</div>; // You can create a proper loading component
+  }
+
   if (!event) return null;
 
   return (
@@ -78,39 +109,55 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Main Image */}
-          {/* Main Image with blur effect */}
-<div className={`relative h-[400px] ${pixelBorder} overflow-hidden bg-black`}>
-  {/* Background blurred image */}
-  <div className="absolute inset-0 scale-110">
-    <Image
-      src={event.mainImage}
-      alt={event.title}
-      fill
-      className="object-cover blur-sm opacity-50"
-      priority
-    />
-  </div>
-  
-  {/* Main sharp image */}
-  <div className="absolute inset-0 flex items-center justify-center">
-    <div className="relative w-full h-full">
-      <Image
-        src={event.mainImage}
-        alt={event.title}
-        fill
-        className="object-contain"
-        priority
-      />
-    </div>
-  </div>
-</div>
+          {/* Main Image Section */}
+          <div className={`relative h-[400px] ${pixelBorder} overflow-hidden bg-gradient-to-b from-[#2C0B3F] to-[#1C0522]`}>
+            {/* Background blur effect with gradient overlay */}
+            <div className="absolute inset-0">
+              <ImageWithFallback
+                src={event.eveThumb}
+                alt={event.eveName}
+                width={1000}
+                height={1000}
+                className="object-cover w-full h-full opacity-40 blur-sm scale-110"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#2C0B3F]/80 to-transparent" />
+            </div>
+            
+            {/* Main image */}
+            <div className="absolute inset-0 flex items-center justify-center p-8">
+              <div className="relative w-full h-full max-w-4xl mx-auto">
+                <ImageWithFallback
+                  src={event.eveThumb}
+                  alt={event.eveName}
+                  className="object-contain w-full h-full rounded-lg"
+                  priority
+                />
+                
+                {/* Decorative elements */}
+                <div className="absolute -left-4 top-1/2 transform -translate-y-1/2 w-1 h-32 bg-gradient-to-b from-pink-500 to-purple-600" />
+                <div className="absolute -right-4 top-1/2 transform -translate-y-1/2 w-1 h-32 bg-gradient-to-b from-pink-500 to-purple-600" />
+                
+                {/* Sparkle effects */}
+                <div className="absolute top-4 left-4 w-2 h-2 bg-white rounded-full animate-pulse" />
+                <div className="absolute top-8 right-8 w-2 h-2 bg-white rounded-full animate-pulse delay-75" />
+                <div className="absolute bottom-4 left-8 w-2 h-2 bg-white rounded-full animate-pulse delay-150" />
+                <div className="absolute bottom-8 right-4 w-2 h-2 bg-white rounded-full animate-pulse delay-300" />
+              </div>
+            </div>
+            
+            {/* Optional: Decorative corners */}
+            <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-pink-500/50" />
+            <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-pink-500/50" />
+            <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-pink-500/50" />
+            <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-pink-500/50" />
+          </div>
 
           {/* Event Info */}
           <div className={`bg-[#4CAF50] p-6 ${pixelBorder}`}>
             <div className="flex justify-between items-start mb-4">
               <h1 className="text-4xl font-bold text-[#FFEB3B]" style={pixelFont}>
-                {event.title}
+                {event.eveName}
               </h1>
               <div className="flex gap-2">
                 <button 
@@ -128,19 +175,19 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             <div className="space-y-4 text-white" style={pixelFont}>
               <div className="flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
-                {event.date}
+                {new Date(event.eveTimestart).toLocaleDateString()}
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5" />
-                {event.time}
+                {new Date(event.eveTimestart).toLocaleTimeString()}
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="w-5 h-5" />
-                {event.location}
+                {event.eveCity}
               </div>
               <div className="flex items-center gap-2">
                 <Ticket className="w-5 h-5" />
-                ${event.price}
+                ${event.eveId}
               </div>
             </div>
           </div>
@@ -150,27 +197,70 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             <h2 className="text-2xl font-bold mb-4 text-[#FFEB3B]" style={pixelFont}>
               About This Event
             </h2>
-            <p className="text-white" style={pixelFont}>{event.description}</p>
+            <p className="text-white" style={pixelFont}>{event.eveDesc}</p>
           </div>
 
-          {/* Gallery */}
-          <div className={`bg-[#4CAF50] p-6 ${pixelBorder}`}>
-            <h2 className="text-2xl font-bold mb-4 text-[#FFEB3B]" style={pixelFont}>
-              Event Gallery
-            </h2>
-            <div className="grid grid-cols-3 gap-4">
-              {event.galleryImages.map((image, index) => (
+          {/* Thông tin vé - Redesigned */}
+          <div className={`bg-gradient-to-br from-[#1a1a1a] to-[#2d2d2d] p-8 ${pixelBorder}`}>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-[#FFEB3B] mb-2" style={pixelFont}>
+                  Thông tin vé
+                </h2>
+                <p className="text-gray-400" style={pixelFont}>
+                  Chọn loại vé phù hợp với bạn
+                </p>
+              </div>
+              <button
+                onClick={handleBuyTickets}
+                className={`mt-4 md:mt-0 px-6 py-3 ${pixelBorder} bg-[#4CAF50] text-white hover:bg-[#45a049] transition-all duration-300`}
+                style={pixelFont}
+              >
+                Mua vé ngay
+              </button>
+            </div>
+            
+            {/* Danh sách vé */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {ticketDisplays.map((ticket) => (
                 <div 
-                  key={index}
-                  className={`relative h-32 ${pixelBorder} overflow-hidden cursor-pointer transform transition-transform hover:scale-105`}
-                  onClick={() => setSelectedImage(image)}
+                  key={`ticket-${ticket.ticketId}`}
+                  className={`relative p-6 bg-[#333333] rounded-lg hover:bg-[#404040] transition-all duration-300 group ${pixelBorder}`}
                 >
-                  <Image
-                    src={image}
-                    alt={`Gallery ${index + 1}`}
-                    fill
-                    className="object-cover"
-                  />
+                  <div className="absolute top-0 right-0 mt-4 mr-4">
+                    <div className="bg-[#4CAF50] px-3 py-1 rounded-full">
+                      <span className="text-sm text-white" style={pixelFont}>
+                        Còn {ticket.quantity} vé
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col h-full">
+                    <h3 className="text-xl font-bold text-[#FFEB3B] mb-2" style={pixelFont}>
+                      {ticket.name}
+                    </h3>
+                    
+                    <div className="flex-grow">
+                      <div className="flex items-baseline mb-4">
+                        <span className="text-2xl font-bold text-[#4CAF50]" style={pixelFont}>
+                          {(ticket.price || 0).toLocaleString()}
+                        </span>
+                        <span className="text-sm text-gray-400 ml-1" style={pixelFont}>đ</span>
+                      </div>
+                      
+                      <p className="text-gray-400" style={pixelFont}>
+                        Bao gồm vé vào cổng và quà tặng đặc biệt
+                      </p>
+                    </div>
+                    
+                    <button
+                      onClick={handleBuyTickets}
+                      className="mt-4 w-full py-2 bg-transparent border-2 border-[#4CAF50] text-[#4CAF50] hover:bg-[#4CAF50] hover:text-white transition-colors duration-300 rounded-md"
+                      style={pixelFont}
+                    >
+                      Chọn vé
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -180,7 +270,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
         {/* Sidebar */}
         <div className="space-y-8">
           {/* Buy Tickets Card */}
-          <div className={`bg-[#4CAF50] p-6 ${pixelBorder} sticky top-4`}>
+          <div className={`bg-[#4CAF50] p-6 ${pixelBorder} sticky top-4`}>  
             <h2 className="text-2xl font-bold mb-4 text-[#FFEB3B]" style={pixelFont}>
               Get Your Tickets
             </h2>
@@ -197,15 +287,15 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             </button>
           </div>
 
-          {/* Organizer Info */}
+          {/* Category Info */}
           <div className={`bg-[#4CAF50] p-6 ${pixelBorder}`}>
             <h2 className="text-2xl font-bold mb-4 text-[#FFEB3B]" style={pixelFont}>
-              Event Organizer
+              Event Category
             </h2>
             <div className="flex items-center gap-4 mb-4">
               <div>
-                <h3 className="text-[#FFEB3B]" style={pixelFont}>{event.organizer.name}</h3>
-                <p className="text-white" style={pixelFont}>{event.organizer.description}</p>
+                <h3 className="text-[#FFEB3B]" style={pixelFont}>{event.category?.catName}</h3>
+                <p className="text-white" style={pixelFont}>{event.category?.catDesc}</p>
               </div>    
             </div>
           </div>
@@ -221,37 +311,30 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
       </Modal>
 
       {event && (
+        
+
         <TicketPurchaseModal
           isOpen={isTicketModalOpen}
           onClose={() => setIsTicketModalOpen(false)}
           event={{
-            id: Number(event.id),
-            name: event.title,
-            date: event.date,
-            time: event.time,
-            location: event.location,
-            image: event.mainImage,
-            price: event.price,
-            description: event.description
+            eveId: event.eveId,
+            eveName: event.eveName,
+            eveDesc: event.eveDesc,
+            eveTimestart: event.eveTimestart,
+            eveCity: event.eveCity,
+            ticketTypes: ticketDisplays?.map(ticket => ({
+              ticketId: ticket.ticketId || 0,
+              name: ticket.name,
+              price: ticket.price,
+              quantity: ticket.quantity
+            })) || [],
+            location: event.eveCity,
+            image: event.eveThumb,
+            price: event.eveId,
+            description: event.eveDesc
           }}
+          ticketTypes={ticketDisplays || []}
         />
-      )}
-
-      {/* Image Preview Modal */}
-      {selectedImage && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-          onClick={() => setSelectedImage('')}
-        >
-          <div className="relative w-full max-w-4xl h-[80vh]">
-            <Image
-              src={selectedImage}
-              alt="Preview"
-              fill
-              className="object-contain"
-            />
-          </div>
-        </div>
       )}
     </div>
   );

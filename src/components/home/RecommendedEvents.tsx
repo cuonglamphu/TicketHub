@@ -9,58 +9,53 @@ interface RecommendedEventsProps {
   onBuyTickets: (event: RecommendedEvent) => void
 }
 
-const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]"
-const pixelFont = { fontFamily: "'Pixelify Sans', sans-serif" }
+const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000] hover:shadow-[6px_6px_0_0_#000000] transition-all duration-200 hover:translate-x-[-2px] hover:translate-y-[-2px]"
+const pixelFont = { fontFamily: "'Press Start 2P', cursive" }
 
 export function RecommendedEvents({ events, onViewDetails, onBuyTickets }: RecommendedEventsProps) {
   return (
-    <div>
-      <h2 className="text-4xl font-bold mb-4 text-[#FFEB3B] text-center md:text-left" style={pixelFont}>
-        Recommended Events
+    <div className="mt-8 pixel-bg p-8 rounded-lg" style={pixelFont}>
+      <h2 className="text-2xl font-bold mb-6 text-[#FFEB3B] pixel-text-shadow animate-pulse">
+        RECOMMENDED EVENTS
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {events.map((event) => (
-          <Card key={event.id} className={`bg-[#4CAF50] ${pixelBorder}`}>
-              <Image 
-                src={event.image} 
-                alt={event.name} 
-                width={500}
-                height={500}
-                // border radius top left and top right, top right more rounded
-                className="w-full h-48 object-cover rounded-t-lg rounded-tr" 
-                quality={100}
+          <div 
+            key={event.eveId} 
+            className={`${pixelBorder} bg-[#4A4A4A] rounded-lg overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105`}
+          >
+            <div className="relative">
+              <img
+                src={event.eveThumb || '/default-image.jpg'}
+                alt={event.eveName}
+                className="w-full h-48 object-cover pixelated"
               />
-            <CardContent className="p-4">
-              <h3 className="text-2xl font-semibold mb-2 text-[#FFEB3B]" style={pixelFont}>
-                {event.name}
-              </h3>
-              <div className="flex items-center text-sm text-white mb-1 text-xl" style={pixelFont}>
-                <Calendar className="mr-2 h-4 w-4" />
-                {event.date} at {event.time}
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-black/50" />
+            </div>
+            
+            <div className="p-4 bg-[#2C2C2C] text-white">
+              <h3 className="text-lg mb-2 text-[#FFA500] pixel-text-shadow">{event.eveName}</h3>
+              <p className="text-sm text-gray-300 mb-2 line-clamp-2">{event.eveDesc}</p>
+              
+              <div className="mb-4 space-y-2">
+                <div className="flex items-center text-[#8BF5FF]">
+                  <Calendar className="w-4 h-4 mr-2 pixel-icon" />
+                  <span className="text-xs">{new Date(event.eveTimestart).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center text-[#FF69B4]">
+                  <MapPin className="w-4 h-4 mr-2 pixel-icon" />
+                  <span className="text-xs">{event.eveCity}</span>
+                </div>
               </div>
-              <div className="flex items-center text-sm text-white text-xl" style={pixelFont}>
-                <MapPin className="mr-2 h-4 w-4" />
-                {event.location}
-              </div>
-            </CardContent>
-            <CardFooter className="p-4 pt-0 flex justify-between">
-              <Button 
-                variant="outline" 
-                onClick={() => onViewDetails(event)} 
-                className={`${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835] text-xl`} 
-                style={pixelFont}
+
+              <button
+                onClick={() => onViewDetails(event)}
+                className="w-full px-4 py-2 bg-[#FFD700] text-black font-bold rounded-none pixel-button hover:bg-[#FFA500] active:translate-y-1 transition-all duration-200"
               >
-                View Details
-              </Button>
-              <Button 
-                onClick={() => onBuyTickets(event)} 
-                className={`${pixelBorder} bg-[#F44336] text-white hover:bg-[#D32F2F] text-xl`} 
-                style={pixelFont}
-              >
-                Buy Tickets
-              </Button>
-            </CardFooter>
-          </Card>
+                ⚔️ VIEW QUEST DETAILS
+              </button>
+            </div>
+          </div>
         ))}
       </div>
     </div>

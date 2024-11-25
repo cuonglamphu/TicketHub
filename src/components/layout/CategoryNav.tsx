@@ -4,13 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRef, useState, useEffect } from 'react';
-
-const categories = [
-  { id: 1, name: 'Nhạc sống', slug: 'music' },
-  { id: 2, name: 'Sân khấu & Nghệ thuật', slug: 'arts' },
-  { id: 3, name: 'Thể Thao', slug: 'sports' },
-  { id: 4, name: 'Khác', slug: 'others' }
-];
+import { categoryService, CategoryResponse } from '@/services/categoryService';
 
 const pixelBorder = "border-b-[4px] border-[#FFEB3B]";
 
@@ -20,6 +14,20 @@ export function CategoryNav() {
   const [showArrows, setShowArrows] = useState(false);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await categoryService.getAll();
+        setCategories(data.slice(0, 4));
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+    
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const checkOverflow = () => {
@@ -86,15 +94,15 @@ export function CategoryNav() {
         >
           <ul className="flex space-x-8 px-4 py-3">
             {categories.map((category) => (
-              <li key={category.id}>
+              <li key={category.catId}>
                 <Link 
-                  href={`/categories/${category.slug}`}
+                  href={`/categories/${category.catSlug}`}
                   className={`block whitespace-nowrap text-lg hover:text-[#FFEB3B] transition-colors
-                    ${pathname === `/categories/${category.slug}` ? 
+                    ${pathname === `/categories/${category.catSlug}` ? 
                       `text-[#FFEB3B] ${pixelBorder}` : ''}`}
                   style={{ fontFamily: "'VT323', monospace" }}
                 >
-                  {category.name}
+                  {category.catName}
                 </Link>
               </li>
             ))}

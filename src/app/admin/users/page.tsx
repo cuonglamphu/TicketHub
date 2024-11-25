@@ -1,51 +1,114 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DataTable } from '@/components/admin/DataTable';
 import { Users } from 'lucide-react';
 import { Card } from "@/components/ui/card";
 import { pixelBorder, pixelFont } from "@/lib/utils";
 import { User } from '@/types/user';
 import { UserForm } from '@/components/admin/UserForm';
+import { userService } from '@/services/userService';
+import { toast } from 'sonner';
 
 export default function UsersPage() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isUserFormOpen, setIsUserFormOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
-  const sampleUsers = [
-    {
-      id: 1,
-      name: 'John Doe',
-      email: 'john@example.com',
-      role: 'User',
-      joinDate: '2024-01-15',
-      ticketsBought: 5,
-      totalSpent: '$250',
-    },
-    // Add more sample users
-  ];
-
-  type Column<T> = {
-    key: keyof T;
-    label: string;
-    sortable?: boolean;
+  const fetchUsers = async () => {
+    try {
+      const data = await userService.getAll();
+      setUsers(data);
+    } catch (error) {
+      toast.error('Failed to fetch users');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const columns: Column<User>[] = [
-    { key: 'name', label: 'Name', sortable: true } as const,
-    { key: 'email', label: 'Email', sortable: true } as const,
-    { key: 'role', label: 'Role', sortable: true } as const,
-    { key: 'joinDate', label: 'Join Date', sortable: true } as const,
-    { key: 'ticketsBought', label: 'Tickets', sortable: true } as const,
-    { key: 'totalSpent', label: 'Total Spent', sortable: true } as const,
-  ];
+  const handleCreateUser = async (userData: Omit<User, 'userId'>) => {
+    try {
+      await userService.create(userData);
+      toast.success('User created successfully');
+      fetchUsers();
+      setIsUserFormOpen(false);
+    } catch (error) {
+      toast.error('Failed to create user');
+    }
+  };
+
+  const handleUpdateUser = async (id: number, userData: Partial<User>) => {
+    try {
+      await userService.update(id, userData);
+      toast.success('User updated successfully');
+      fetchUsers();
+      setIsUserFormOpen(false);
+    } catch (error) {
+      toast.error('Failed to update user');
+    }
+  };
+
+  const handleDeleteUser = async (user: User) => {
+    if (window.confirm(`Are you sure you want to delete ${user.userName}?`)) {
+      try {
+        await userService.delete(user.userId);
+        toast.success('User deleted successfully');
+        fetchUsers();
+      } catch (error) {
+        toast.error('Failed to delete user');
+      }
+    }
+  };
+
+  type Column = {
+    key: keyof User;
+    label: string;
+    sortable?: boolean;
+    formatter?: (value: any) => string;
+  };
+  
+  const columns: Column[] = [
+    { key: 'userName', label: 'Name', sortable: true },
+    { key: 'userEmail', label: 'Email', sortable: true },
+    { key: 'userRole', label: 'Role', sortable: true },
+    { 
+      key: 'userJoinDate', 
+      label: 'Join Date', 
+      sortable: true,
+      formatter: (value: string) => new Date(value).toLocaleDateString()
+    },
+    { 
+      key: 'totalTickets', 
+      label: 'Tickets', 
+      sortable: true,
+      formatter: (value: number) => value.toString()
+    },
+    { 
+      key: 'totalSpent', 
+      label: 'Total Spent', 
+      sortable: true,
+      formatter: (value: number) => `$${value.toFixed(2)}`
+    },
+  ] as const;
 
   const stats = [
-    { label: 'Total Users', value: '1,234' },
-    { label: 'Active Users', value: '892' },
-    { label: 'New This Month', value: '45' },
+    { label: 'Total Users', value: users.length.toString() },
+    { label: 'Active Users', value: users.filter(u => (u.totalTickets ?? 0) > 0).length.toString() },
+    { label: 'New This Month', value: users.filter(u => {
+      const joinDate = new Date(u.userJoinDate);
+      const now = new Date();
+      return joinDate.getMonth() === now.getMonth() && 
+             joinDate.getFullYear() === now.getFullYear() &&
+             joinDate <= now;
+    }).length.toString() },
   ];
+
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div className="space-y-6">
@@ -76,20 +139,25 @@ export default function UsersPage() {
 
       <DataTable<User>
         columns={columns}
-        data={sampleUsers}
+        data={users}
         onEdit={(user) => {
           setSelectedUser(user);
           setIsUserFormOpen(true);
         }}
-        onDelete={(user) => {
-          console.log('Delete user:', user);
-        }}
+        onDelete={handleDeleteUser}
       />
 
       <UserForm 
         isOpen={isUserFormOpen}
-        onClose={() => setIsUserFormOpen(false)}
+        onClose={() => {
+          setIsUserFormOpen(false);
+          setSelectedUser(null);
+        }}
         user={selectedUser}
+        onSubmit={selectedUser ? 
+          (data) => handleUpdateUser(selectedUser.userId, data) : 
+          handleCreateUser
+        }
       />
     </div>
   );
