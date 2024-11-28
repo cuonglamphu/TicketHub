@@ -17,6 +17,8 @@ interface Column<T> {
   key: keyof T;
   label: string;
   sortable?: boolean;
+  render?: (item: T) => React.ReactNode;
+  formatter?: (value: T[keyof T]) => string;
 }
 
 interface DataTableProps<T> {
@@ -29,6 +31,7 @@ interface DataTableProps<T> {
 
 const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]";
 const pixelFont = { fontFamily: "'Pixelify Sans', sans-serif" };
+const pixelButton = "border-2 border-black shadow-[2px_2px_0_0_#000000] active:shadow-[0_0_0_0_#000000] active:translate-y-[2px] active:translate-x-[2px]";
 
 export function DataTable<T>({ 
   columns, 
@@ -137,14 +140,20 @@ export function DataTable<T>({
                     className="text-white py-4 px-6"
                     style={pixelFont}
                   >
-                    {formatCellContent(item[column.key])}
+                    {column.render 
+                      ? column.render(item)
+                      : formatCellContent(item[column.key])
+                    }
                   </TableCell>
                 ))}
                 <TableCell className="py-4 px-6">
                   <div className="flex gap-3">
                     <Button
                       onClick={() => onEdit(item)}
-                      className="bg-[#FFEB3B] hover:bg-[#FDD835] text-black transition-colors px-3 py-2"
+                      className={`
+                        bg-[#FFEB3B] hover:bg-[#FDD835] text-black transition-colors px-3 py-2
+                        ${pixelButton}
+                      `}
                       size="sm"
                     >
                       <Edit className="h-4 w-4 mr-1" />
@@ -154,7 +163,10 @@ export function DataTable<T>({
                       onClick={() => setDeleteItem(item)}
                       variant="destructive"
                       size="sm"
-                      className="transition-colors px-3 py-2"
+                      className={`
+                        transition-colors px-3 py-2
+                        ${pixelButton}
+                      `}
                     >
                       <Trash2 className="h-4 w-4 mr-1" />
                       <span className="hidden sm:inline">Delete</span>
@@ -186,6 +198,7 @@ export function DataTable<T>({
               className={`
                 bg-[#FFEB3B] hover:bg-[#FDD835] text-black transition-colors
                 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}
+                ${pixelButton}
               `}
               size="sm"
             >
@@ -197,6 +210,7 @@ export function DataTable<T>({
               className={`
                 bg-[#FFEB3B] hover:bg-[#FDD835] text-black transition-colors
                 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}
+                ${pixelButton}
               `}
               size="sm"
             >

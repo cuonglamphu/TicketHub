@@ -10,7 +10,6 @@ interface UserProfile {
   id: string;
   email: string;
   fullName: string;
-  phone: string;
   avatar?: string;
 }
 
@@ -23,7 +22,7 @@ export default function SettingsPage() {
     id: '',
     email: '',
     fullName: '',
-    phone: '',
+    avatar: ''
   });
   const [isEditing, setIsEditing] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -39,10 +38,9 @@ export default function SettingsPage() {
 
     // TODO: Fetch user profile from API
     setProfile({
-      id: user.id,
-      email: user.email,
-      fullName: 'John Doe',
-      phone: '0123456789',
+      id: user.userId.toString(),
+      email: user.userEmail,
+      fullName: user.userName,
       avatar: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=John'
     });
   }, [router]);
@@ -90,7 +88,7 @@ export default function SettingsPage() {
             <label className="block text-[#FFEB3B] mb-2" style={pixelFont}>Email</label>
             <Input
               type="email"
-              value={profile.email}
+              value={profile.email ?? ''}
               disabled
               className="bg-white"
             />
@@ -100,19 +98,8 @@ export default function SettingsPage() {
             <label className="block text-[#FFEB3B] mb-2" style={pixelFont}>Full Name</label>
             <Input
               type="text"
-              value={profile.fullName}
+              value={profile.fullName ?? ''}
               onChange={(e) => setProfile({...profile, fullName: e.target.value})}
-              disabled={!isEditing}
-              className="bg-white"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[#FFEB3B] mb-2" style={pixelFont}>Phone</label>
-            <Input
-              type="tel"
-              value={profile.phone}
-              onChange={(e) => setProfile({...profile, phone: e.target.value})}
               disabled={!isEditing}
               className="bg-white"
             />

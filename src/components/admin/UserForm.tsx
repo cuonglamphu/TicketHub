@@ -1,117 +1,119 @@
 "use client";
 
-import { User } from "@/types/user";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { User } from "@/types/user";
 import { useState, useEffect } from "react";
-import { pixelBorder } from "@/lib/utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { pixelBorder, pixelFont } from "@/lib/utils";
+
+export type UserFormData = {
+  userName: string;
+  userEmail: string;
+  userPassword?: string;
+  userRole: 'USER' | 'ADMIN';
+  firstName?: string;
+  lastName?: string;
+};
 
 interface UserFormProps {
   isOpen: boolean;
   onClose: () => void;
   user: User | null;
+  onSubmit: (data: UserFormData) => Promise<void>;
 }
 
-export function UserForm({ isOpen, onClose, user }: UserFormProps) {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    role: 'user',
+export function UserForm({ isOpen, onClose, user, onSubmit }: UserFormProps) {
+  const [formData, setFormData] = useState<UserFormData>({
+    userName: '',
+    userEmail: '',
+    userPassword: '',
+    userRole: 'USER'
   });
 
   useEffect(() => {
     if (user) {
       setFormData({
-        name: user.name || '',
-        email: user.email || '',
-        role: user.role || 'user',
+        userName: user.userName,
+        userEmail: user.userEmail,
+        userPassword: '',
+        userRole: user.userRole as 'USER' | 'ADMIN'
       });
     } else {
       setFormData({
-        name: '',
-        email: '',
-        role: 'user',
+        userName: '',
+        userEmail: '',
+        userPassword: '',
+        userRole: 'USER'
       });
     }
   }, [user]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Xử lý logic submit form ở đây
-    console.log('Form submitted:', formData);
-    onClose();
+    await onSubmit(formData);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={`${pixelBorder} bg-[#4CAF50]`}>
         <DialogHeader>
-          <DialogTitle className="text-[#FFEB3B]">
-            {user ? 'Edit User' : 'Add New User'}
+          <DialogTitle className="text-[#FFEB3B]" style={pixelFont}>
+            {user ? 'Edit User' : 'Create User'}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
+            <Label htmlFor="userName">Name</Label>
             <Input
-              placeholder="Name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="bg-white"
+              id="userName"
+              value={formData.userName}
+              onChange={(e) => setFormData({...formData, userName: e.target.value})}
+              className={pixelBorder}
             />
           </div>
           <div>
+            <Label htmlFor="userEmail">Email</Label>
             <Input
+              id="userEmail"
               type="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="bg-white"
+              value={formData.userEmail}
+              onChange={(e) => setFormData({...formData, userEmail: e.target.value})}
+              className={pixelBorder}
             />
           </div>
+          {!user && (
+            <div>
+              <Label htmlFor="userPassword">Password</Label>
+              <Input
+                id="userPassword"
+                type="password"
+                value={formData.userPassword}
+                onChange={(e) => setFormData({...formData, userPassword: e.target.value})}
+                className={pixelBorder}
+              />
+            </div>
+          )}
           <div>
+            <Label htmlFor="userRole">Role</Label>
             <Select
-              value={formData.role}
-              onValueChange={(value) => setFormData({ ...formData, role: value })}
+              value={formData.userRole}
+              onValueChange={(value) => setFormData({...formData, userRole: value as 'ADMIN' | 'USER'})}
             >
-              <SelectTrigger className={`${pixelBorder} bg-white`}>
+              <SelectTrigger className={pixelBorder}>
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="moderator">Moderator</SelectItem>
+                <SelectItem value="USER">User</SelectItem>
+                <SelectItem value="ADMIN">Admin</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              onClick={onClose}
-              variant="outline"
-              className={`${pixelBorder} bg-gray-200`}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className={`${pixelBorder} bg-[#FFEB3B] hover:bg-[#FDD835]`}
-            >
-              {user ? 'Update' : 'Create'}
-            </Button>
-          </div>
+          <Button type="submit" className={`${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835]`}>
+            {user ? 'Update' : 'Create'}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

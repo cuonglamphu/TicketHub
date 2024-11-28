@@ -8,32 +8,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Category } from '@/types/category'
 
 // Constants
-const PIXEL_BORDER = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]"
-const PIXEL_FONT = { fontFamily: "'Pixelify Sans', sans-serif" }
-
-// Data
-const CATEGORIES = [
-    { value: 'music', label: 'Music' },
-    { value: 'gaming', label: 'Gaming' },
-  { value: 'art', label: 'Art' },
-  { value: 'technology', label: 'Technology' },
-]
-
-const CITIES = [
-  { value: 'new-york', label: 'New York' },
-  { value: 'los-angeles', label: 'Los Angeles' },
-  { value: 'tokyo', label: 'Tokyo' },
-  { value: 'london', label: 'London' },
-]
+const PIXEL_BORDER = "border-[3px] border-black shadow-[3px_3px_0_0_#000000]"
+const COMMON_INPUT_STYLES = `
+  bg-white/95 backdrop-blur-sm
+  text-black placeholder-gray-500
+  transition-all duration-200
+  hover:bg-white focus:bg-white
+  hover:shadow-[4px_4px_0_0_#000000]
+  ${PIXEL_BORDER}
+  text-lg
+`
 
 // Types
+interface City {
+  id: string;
+  name: string;
+}
+
 interface SearchFiltersProps {
   searchTerm: string
   category: string
   city: string
   date: string
+  categories: Category[]
+  cities: City[]
   onSearchTermChange: (value: string) => void
   onCategoryChange: (value: string) => void
   onCityChange: (value: string) => void
@@ -46,6 +47,7 @@ export function SearchFilters({
   category,
   city,
   date,
+  categories,
   onSearchTermChange,
   onCategoryChange,
   onCityChange,
@@ -54,105 +56,68 @@ export function SearchFilters({
 }: SearchFiltersProps) {
   return (
     <div className={`
-      bg-gradient-to-r from-[#43A047] to-[#4CAF50]
-      p-8 rounded-xl mb-8 
+      bg-gradient-to-br from-[#43A047] via-[#4CAF50] to-[#66BB6A]
+      p-6 rounded-2xl mb-8 
       ${PIXEL_BORDER}
-      transition-all duration-300 hover:shadow-[6px_6px_0_0_#000000]
+      transition-all duration-300 
+      hover:shadow-[4px_4px_0_0_#000000]
+      hover:translate-y-[-2px]
     `}>
-      <div className="flex flex-wrap gap-6 mb-6">
+      <div className="flex flex-wrap gap-4 mb-4">
         {/* Search Input */}
         <Input
           type="text"
           placeholder="Search events..."
-          value={searchTerm}
+          value={searchTerm ?? ''}
           onChange={(e) => onSearchTermChange(e.target.value)}
           className={`
             flex-grow min-w-[250px]
-            bg-white/90 backdrop-blur-sm
-            text-black placeholder-gray-600
-            text-lg py-6
-            transition-all duration-300
-            hover:bg-white focus:bg-white
-            ${PIXEL_BORDER}
-            text-xl
+            py-5
+            ${COMMON_INPUT_STYLES}
           `}
-          style={PIXEL_FONT}
         />
 
         {/* Category Select */}
-        <Select value={category} onValueChange={onCategoryChange}>
+        <Select value={category.toString()} onValueChange={onCategoryChange}>
           <SelectTrigger 
             className={`
-              min-w-[180px] h-[52px]
-              bg-white/90 backdrop-blur-sm
-              text-black 
-              transition-all duration-300
-              hover:bg-white
-              ${PIXEL_BORDER}
-              text-xl
-            `} 
-            style={PIXEL_FONT}
+              min-w-[180px] h-[48px]
+              ${COMMON_INPUT_STYLES}
+            `}
           >
             <SelectValue placeholder="Category" />
           </SelectTrigger>
-          <SelectContent className="bg-white/95 backdrop-blur-md">
-            {CATEGORIES.map(({ value, label }) => (
-              <SelectItem 
-                key={value} 
-                value={value}
-                className="hover:bg-gray-100 cursor-pointer text-xl"
-              >
-                {label}
+          <SelectContent className="bg-white/95 backdrop-blur-md rounded-lg border-2 border-black">
+            {categories.map((cat) => (
+              <SelectItem key={cat.catId} value={cat.catId.toString()}>
+                {cat.catName}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        {/* City Select */}
-        <Select value={city} onValueChange={onCityChange}>
-          <SelectTrigger 
-            className={`
-              min-w-[180px] h-[52px]
-              bg-white/90 backdrop-blur-sm
-              text-black
-              transition-all duration-300
-              hover:bg-white
-              ${PIXEL_BORDER}
-              text-xl
-            `} 
-            style={PIXEL_FONT}
-          >
-            <SelectValue placeholder="City" />
-          </SelectTrigger>
-          <SelectContent className="bg-white/95 backdrop-blur-md">
-            {CITIES.map(({ value, label }) => (
-              <SelectItem 
-                key={value} 
-                value={value}
-                className="hover:bg-gray-100 cursor-pointer text-xl"
-              >
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* City Input */}
+        <Input
+          type="text"
+          placeholder="Enter city..."
+          value={city ?? ''}
+          onChange={(e) => onCityChange(e.target.value)}
+          className={`
+            min-w-[180px] h-[48px]
+            ${COMMON_INPUT_STYLES}
+          `}
+        />
 
         {/* Date Input */}
         <Input
           type="date"
-          value={date}
+          value={date ?? ''}
           placeholder='dd/mm/yyyy'
           onChange={(e) => onDateChange(e.target.value)}
           className={`
-            flex-grow min-w-[180px] h-[52px]
-            bg-white/90 backdrop-blur-sm
-            text-black
-            transition-all duration-300
-            hover:bg-white focus:bg-white
-            ${PIXEL_BORDER}
-            text-xl
+            min-w-[180px] h-[48px]
+            ${COMMON_INPUT_STYLES}
           `}
-          style={PIXEL_FONT}
         />
       </div>
 
@@ -160,19 +125,19 @@ export function SearchFilters({
       <Button 
         onClick={onSearch} 
         className={`
-          w-full h-[52px]
-          bg-gradient-to-r from-[#FFD600] to-[#FFEB3B]
-          text-black text-lg font-bold
-          transition-all duration-300
-          hover:from-[#FDD835] hover:to-[#FFD600]
-          hover:shadow-[6px_6px_0_0_#000000]
-          active:translate-y-1
+          w-full h-[48px]
+          bg-gradient-to-r from-[#FFD600] via-[#FFEB3B] to-[#FFF176]
+          text-black font-bold
+          transition-all duration-200
+          hover:from-[#FDD835] hover:via-[#FFD600] hover:to-[#FFE082]
+          hover:shadow-[4px_4px_0_0_#000000]
+          hover:translate-y-[-2px]
+          active:translate-y-[1px]
           ${PIXEL_BORDER}
-          text-xl
+          text-lg
         `} 
-        style={PIXEL_FONT}
       >
-        <Search className="mr-3 h-5 w-5 text-xl" /> 
+        <Search className="mr-2 h-5 w-5" /> 
         Search Events
       </Button>
     </div>

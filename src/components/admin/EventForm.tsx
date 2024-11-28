@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
+import { Textarea } from "@/components/ui/textarea";
+import {  
   Dialog,
   DialogContent,
   DialogHeader,
@@ -16,184 +17,199 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AdminEvent } from '@/types/event';
+import { Event, CreateEventDto } from '@/types/event';
+import { Category } from '@/types/category';
+import { categoryService } from '@/services/categoryService';
+import { Calendar, MapPin, Image as ImageIcon } from 'lucide-react';
 
 interface EventFormProps {
   isOpen: boolean;
   onClose: () => void;
-  event?: AdminEvent;
+  onSubmit: (data: CreateEventDto) => Promise<void>;
+  event?: Event;
 }
 
 const pixelFont = { fontFamily: "'Pixelify Sans', sans-serif" };
+const inputClasses = "bg-white/90 border-2 border-black focus:border-[#FFEB3B] transition-colors";
+const labelClasses = "text-[#FFEB3B] font-bold block mb-2 flex items-center gap-2";
 
-// Sample data - replace with API calls
-const venues = [
-  { id: 1, name: 'Central Park' },
-  { id: 2, name: 'Madison Square Garden' },
-];
-
-const categories = [
-  { id: 1, name: 'Music' },
-  { id: 2, name: 'Sports' },
-];
-
-export function EventForm({ isOpen, onClose, event }: EventFormProps) {
-  const [formData, setFormData] = useState({
-    eventName: '',
-    totalExpenses: 0,
-    venueId: '',
-    catId: '',
-    date: '',
-    startTime: '',
+export function EventForm({ isOpen, onClose, onSubmit, event }: EventFormProps) {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [formData, setFormData] = useState<CreateEventDto>({
+    eveName: '',
+    eveDesc: '',
+    eveCity: '',
+    eveTimestart: '',
+    eveTimeend: '',
+    eveThumb: '',
+    catId: 0
   });
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await categoryService.getAll();
+        setCategories(data as Category[]);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     if (event) {
       setFormData({
-        eventName: event.eventName || '',
-        totalExpenses: event.totalExpenses || 0,
-        venueId: event.venueId?.toString() || '',
-        catId: event.catId?.toString() || '',
-        date: event.date || '',
-        startTime: event.startTime || '',
-      });
-    } else {
-      setFormData({
-        eventName: '',
-        totalExpenses: 0,
-        venueId: '',
-        catId: '',
-        date: '',
-        startTime: '',
+        eveName: event.eveName,
+        eveDesc: event.eveDesc,
+        eveCity: event.eveCity,
+        eveTimestart: event.eveTimestart,
+        eveTimeend: event.eveTimeend,
+        eveThumb: event.eveThumb,
+        catId: event.catId
       });
     }
   }, [event]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Implement form submission logic
-    console.log('Form data:', formData);
+    await onSubmit(formData);
     onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#4CAF50] sm:max-w-[500px]">
+      <DialogContent className="bg-[#4CAF50] sm:max-w-[600px] border-4 border-black shadow-[8px_8px_0_0_#000000]">
         <DialogHeader>
-          <DialogTitle className="text-[#FFEB3B]" style={pixelFont}>
-            {event ? 'Edit Event' : 'Create New Event'}
+          <DialogTitle className="text-[#FFEB3B] text-2xl text-center mb-4" style={pixelFont}>
+            {event ? '🎮 Edit Event' : '🎮 Create New Event'}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="text-white block mb-1" style={pixelFont}>
-              Event Name
-            </label>
-            <Input
-              value={formData.eventName}
-              onChange={(e) => setFormData(prev => ({ ...prev, eventName: e.target.value }))}
-              className="bg-white"
-              required
-            />
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div className="space-y-4">
+              <div>
+                <label className={labelClasses} style={pixelFont}>
+                  <span className="text-2xl">🎯</span> Event Name
+                </label>
+                <Input
+                  value={formData.eveName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, eveName: e.target.value }))}
+                  className={inputClasses}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className={labelClasses} style={pixelFont}>
+                  <MapPin className="h-5 w-5" /> City
+                </label>
+                <Input
+                  value={formData.eveCity}
+                  onChange={(e) => setFormData(prev => ({ ...prev, eveCity: e.target.value }))}
+                  className={inputClasses}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className={labelClasses} style={pixelFont}>
+                  <Calendar className="h-5 w-5" /> Start Time
+                </label>
+                <Input
+                  type="datetime-local"
+                  value={formData.eveTimestart}
+                  onChange={(e) => setFormData(prev => ({ ...prev, eveTimestart: e.target.value }))}
+                  className={inputClasses}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className={labelClasses} style={pixelFont}>
+                  <Calendar className="h-5 w-5" /> End Time
+                </label>
+                <Input
+                  type="datetime-local"
+                  value={formData.eveTimeend}
+                  onChange={(e) => setFormData(prev => ({ ...prev, eveTimeend: e.target.value }))}
+                  className={inputClasses}
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-4">
+              <div>
+                <label className={labelClasses} style={pixelFont}>
+                  <span className="text-2xl">📝</span> Description
+                </label>
+                <Textarea
+                  value={formData.eveDesc}
+                  onChange={(e) => setFormData(prev => ({ ...prev, eveDesc: e.target.value }))}
+                  className={`${inputClasses} h-[120px]`}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className={labelClasses} style={pixelFont}>
+                  <ImageIcon className="h-5 w-5" /> Thumbnail URL
+                </label>
+                <Input
+                  value={formData.eveThumb}
+                  onChange={(e) => setFormData(prev => ({ ...prev, eveThumb: e.target.value }))}
+                  className={inputClasses}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className={labelClasses} style={pixelFont}>
+                  <span className="text-2xl">🏷️</span> Category
+                </label>
+                <Select
+                  value={formData.catId.toString()}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, catId: parseInt(value) }))}
+                >
+                  <SelectTrigger className={`${inputClasses} bg-white`}>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem 
+                        key={category.catId} 
+                        value={category.catId.toString()}
+                        className="text-base"
+                      >
+                        {category.catName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label className="text-white block mb-1" style={pixelFont}>
-              Total Expenses
-            </label>
-            <Input
-              type="number"
-              value={formData.totalExpenses}
-              onChange={(e) => setFormData(prev => ({ ...prev, totalExpenses: parseFloat(e.target.value) }))}
-              className="bg-white"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="text-white block mb-1" style={pixelFont}>
-              Venue
-            </label>
-            <Select
-              value={formData.venueId}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, venueId: value }))}
-            >
-              <SelectTrigger className="bg-white">
-                <SelectValue placeholder="Select venue" />
-              </SelectTrigger>
-              <SelectContent>
-                {venues.map((venue) => (
-                  <SelectItem key={venue.id} value={venue.id.toString()}>
-                    {venue.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label className="text-white block mb-1" style={pixelFont}>
-              Category
-            </label>
-            <Select
-              value={formData.catId}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, catId: value }))}
-            >
-              <SelectTrigger className="bg-white">
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id.toString()}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label className="text-white block mb-1" style={pixelFont}>
-              Date
-            </label>
-            <Input
-              type="date"
-              value={formData.date}
-              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-              className="bg-white"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="text-white block mb-1" style={pixelFont}>
-              Start Time
-            </label>
-            <Input
-              type="time"
-              value={formData.startTime}
-              onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
-              className="bg-white"
-              required
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 pt-4">
+          <div className="flex justify-end gap-3 pt-6 border-t-2 border-black">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
-              className="bg-white hover:bg-gray-100"
+              className="bg-white hover:bg-gray-100 border-2 border-black text-black"
               style={pixelFont}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="bg-[#FFEB3B] hover:bg-[#FDD835] text-black"
+              className="bg-[#FFEB3B] hover:bg-[#FDD835] text-black border-2 border-black"
               style={pixelFont}
             >
-              {event ? 'Update' : 'Create'}
+              {event ? '🚀 Update Event' : '🚀 Create Event'}
             </Button>
           </div>
         </form>

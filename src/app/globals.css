@@ -146,3 +146,31 @@ body {
   transform-style: preserve-3d;
   backface-visibility: hidden;
 }
+
+@font-face {
+  font-family: 'PixelFont';
+  src: url('/fonts/your-pixel-font.ttf') format('truetype');
+}
+
+.font-pixel {
+  font-family: 'PixelFont', monospace;
+  letter-spacing: 0.05em;
+}
+
+.pixel-art-warning, .pixel-art-info, .pixel-art-loading {
+  image-rendering: pixelated;
+  transform: scale(1.2);
+}
+  
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pixel-art-loading {
+  animation: spin 2s linear infinite;
+}

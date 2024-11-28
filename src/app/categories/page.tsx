@@ -4,14 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Music, Gamepad2, Palette, Utensils } from 'lucide-react';
-
-interface Category {
-  id: number;
-  name: string;
-  description: string;
-  image: string;
-  eventCount: number;
-}
+import { Category } from '@/types/category';
+import { categoryService } from '@/services/categoryService';
 
 const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]";
 const pixelFont = { fontFamily: "'Pixelify Sans', sans-serif" };
@@ -20,38 +14,26 @@ export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    // Mock data - replace with API call
-    setCategories([
-      {
-        id: 1,
-        name: 'Music',
-        description: 'Live concerts, festivals, and musical performances',
-        image: 'https://salt.tkbcdn.com/ts/ds/ab/c3/34/a0da8994fb4ab5117ae208039cd261ae.png',
-        eventCount: 12
-      },
-      {
-        id: 2,
-        name: 'Sports',
-        description: 'Sports events, tournaments, and competitions',
-        image: 'https://salt.tkbcdn.com/ts/ds/cd/5e/61/df391f3476fbdae8ae9026dba07c8ad6.png',
-        eventCount: 8
-      },
-      {
-        id: 3,
-        name: 'Arts & Theater',
-        description: 'Art exhibitions, theater shows, and cultural events',
-        image: 'https://salt.tkbcdn.com/ts/ds/5d/3b/5c/006fb1fd95e2d66dcf737569f6be23c9.jpg',
-        eventCount: 15
-      },
-      {
-        id: 4,
-        name: 'Food & Drinks',
-        description: 'Food festivals, wine tastings, and culinary events',
-        image: 'https://salt.tkbcdn.com/ts/ds/de/fd/9b/8f4fd89066ec3447a0ddd21995e44bf2.png',
-        eventCount: 6
+    const fetchCategories = async () => {
+      try {
+        const data = await categoryService.getAll();
+        setCategories(data as Category[]);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
       }
-    ]);
+    };
+    fetchCategories();
   }, []);
+
+  const getCategoryIcon = (name: string) => {
+    switch (name.toLowerCase()) {
+      case 'music': return <Music className="w-4 h-4 md:w-6 md:h-6 text-black" />;
+      case 'sports': return <Gamepad2 className="w-4 h-4 md:w-6 md:h-6 text-black" />;
+      case 'arts': return <Palette className="w-4 h-4 md:w-6 md:h-6 text-black" />;
+      case 'food': return <Utensils className="w-4 h-4 md:w-6 md:h-6 text-black" />;
+      default: return <Music className="w-4 h-4 md:w-6 md:h-6 text-black" />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a1a1a] to-[#2d2d2d] relative overflow-hidden">
@@ -87,8 +69,8 @@ export default function CategoriesPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-8">
           {categories.map((category) => (
             <Link 
-              href={`/categories/${category.id}`}
-              key={category.id}
+              href={`/categories/${category.catSlug}`}
+              key={category.catId}
               className={`
                 group bg-gradient-to-br from-[#4CAF50] to-[#388E3C]
                 ${pixelBorder} 
@@ -99,8 +81,8 @@ export default function CategoriesPage() {
               {/* Image Container */}
               <div className="relative h-36 md:h-48 overflow-hidden">
                 <Image
-                  src={category.image}
-                  alt={category.name}
+                  src={category.catThumb || '/default-category.jpg'}
+                  alt={category.catName}
                   fill
                   className="object-cover transition-transform group-hover:scale-110 duration-500"
                 />
@@ -108,10 +90,7 @@ export default function CategoriesPage() {
                 
                 {/* Category Icon */}
                 <div className="absolute top-2 right-2 md:top-4 md:right-4 bg-[#FFEB3B] p-1.5 md:p-2 rounded-lg shadow-lg">
-                  {category.name === 'Music' && <Music className="w-4 h-4 md:w-6 md:h-6 text-black" />}
-                  {category.name === 'Sports' && <Gamepad2 className="w-4 h-4 md:w-6 md:h-6 text-black" />}
-                  {category.name === 'Arts & Theater' && <Palette className="w-4 h-4 md:w-6 md:h-6 text-black" />}
-                  {category.name === 'Food & Drinks' && <Utensils className="w-4 h-4 md:w-6 md:h-6 text-black" />}
+                  {getCategoryIcon(category.catName)}
                 </div>
               </div>
 
@@ -119,16 +98,16 @@ export default function CategoriesPage() {
               <div className="p-4 md:p-6">
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <h3 className="text-xl md:text-2xl font-bold text-[#FFEB3B]" style={pixelFont}>
-                    {category.name}
+                    {category.catName}
                   </h3>
                   <span className="px-2 md:px-3 py-0.5 md:py-1 bg-[#FFEB3B] text-black rounded-full text-xs md:text-sm" 
                         style={pixelFont}>
-                    {category.eventCount} Events
+                    {category.eventCount || 0} Events
                   </span>
                 </div>
                 
                 <p className="text-white/90 mb-3 md:mb-4 text-xs md:text-base" style={pixelFont}>
-                  {category.description}
+                  {category.catDesc}
                 </p>
 
                 <div className="flex items-center text-[#FFEB3B] text-sm md:text-base group-hover:translate-x-2 transition-transform" 

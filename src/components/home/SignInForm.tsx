@@ -3,16 +3,15 @@
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { useState } from "react";
+import { toast } from "sonner";
+import { authService } from "@/services/authService";
 
 const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]"
 
-
-// 
-
 export default function SignInForm({ onClose }: { onClose: () => void } ) {
     const [formData, setFormData] = useState({
-        email: '',
-        password: ''
+        userEmail: '',
+        userPassword: ''
     });
 
     const [errors, setErrors] = useState({
@@ -27,15 +26,15 @@ export default function SignInForm({ onClose }: { onClose: () => void } ) {
         };
         let isValid = true;
 
-        if (!formData.email) {
+        if (!formData.userEmail) {
             newErrors.email = 'Email is required';
             isValid = false;
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        } else if (!/\S+@\S+\.\S+/.test(formData.userEmail)) {
             newErrors.email = 'Email is invalid';
             isValid = false;
         }
 
-        if (!formData.password) {
+        if (!formData.userPassword) {
             newErrors.password = 'Password is required';
             isValid = false;
         }
@@ -47,34 +46,21 @@ export default function SignInForm({ onClose }: { onClose: () => void } ) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (validateForm()) {
-            if(formData.email === '1@gmail.com' && formData.password === '1') {
-                const TWO_HOURS = 2 * 60 * 60 * 1000;
-                const currentTime = Math.floor(Date.now() / TWO_HOURS) * TWO_HOURS;
-                const expirationDate = new Date(currentTime + TWO_HOURS);
-                
-                localStorage.setItem('user', JSON.stringify({
-                    id: '1',
-                    email: formData.email,
-                    expiresAt: expirationDate.getTime(),
-                    firstName: 'John',
-                    lastName: 'Doe'
-                }));
+            try {
+                const user = await authService.login(formData);
+                localStorage.setItem('user', JSON.stringify(user));
+                toast.success('Login successful!');
+                // reload page
+                window.location.reload();
                 onClose();
-            } else if(formData.email === '2@gmail.com' && formData.password === '2') {
-                const expirationDate = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours from now
-                localStorage.setItem('user', JSON.stringify({
-                    id: '2',
-                    email: formData.email,
-                    expiresAt: expirationDate.getTime(),
-                    firstName: 'Jane',
-                    lastName: 'Doe'
-                })); 
-                onClose();    
-            } else {
-                console.log('Invalid email or password');
-                setErrors({ email: 'Invalid email or password', password: 'Invalid email or password' });
+            } catch (error) {
+                console.error('Login error:', error);
+                toast.error('Invalid email or password');
+                setErrors({ 
+                    email: 'Invalid email or password', 
+                    password: 'Invalid email or password' 
+                });
             }
-            
         }
     };
 
@@ -90,9 +76,9 @@ export default function SignInForm({ onClose }: { onClose: () => void } ) {
         <div>
             <Input
                 type="email"
-                name="email"
+                name="userEmail"
                 placeholder="Email"
-                value={formData.email}
+                value={formData.userEmail}
                 onChange={handleChange}
                 className={`
                     w-full
@@ -112,9 +98,9 @@ export default function SignInForm({ onClose }: { onClose: () => void } ) {
         <div>
             <Input
                 type="password"
-                name="password"
+                name="userPassword"
                 placeholder="Password"
-                value={formData.password}
+                value={formData.userPassword}
                 onChange={handleChange}
                 className={`
                     w-full

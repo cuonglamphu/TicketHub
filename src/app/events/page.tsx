@@ -1,68 +1,59 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, Filter, Music, MapPin, Calendar, DollarSign } from 'lucide-react';
-import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import { Search, Filter, Music, MapPin, Calendar } from 'lucide-react';
 import Link from 'next/link';
+import { Event } from '@/types/event';
+import { Category } from '@/types/category';
+import { eventService } from '@/services/eventService';
+import { categoryService } from '@/services/categoryService';
+import { pixelBorder, pixelFont } from '@/lib/utils';
+import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 
-const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]";
-const pixelFont = { fontFamily: "'Pixelify Sans', sans-serif" };
-
-// Mock data - replace with real API call
-const events = [
-  {
-    id: 1,
-    title: "Summer Music Festival",
-    category: "Music",
-    date: "2024-07-15",
-    time: "18:00",
-    location: "Central Park",
-    price: 50,
-    image: "https://salt.tkbcdn.com/ts/ds/de/fd/9b/8f4fd89066ec3447a0ddd21995e44bf2.png"
-  },
-  {
-    id: 2,
-    title: "Summer Music Festival",
-    category: "Music",
-    date: "2024-07-15",
-    time: "18:00",
-    location: "Central Park",
-    price: 50,
-    image: "https://salt.tkbcdn.com/ts/ds/de/fd/9b/8f4fd89066ec3447a0ddd21995e44bf2.png"
-  },
-  {
-    id: 3,
-    title: "Summer Music Festival",
-    category: "Music",
-    date: "2024-07-15",
-    time: "18:00",
-    location: "Central Park",
-    price: 50,
-    image: "https://salt.tkbcdn.com/ts/ds/de/fd/9b/8f4fd89066ec3447a0ddd21995e44bf2.png"
-  },
-  {
-    id: 4,
-    title: "Summer Music Festival",
-    category: "Music",
-    date: "2024-07-15",
-    time: "18:00",
-    location: "Central Park",
-    price: 50,
-    image: "https://salt.tkbcdn.com/ts/ds/de/fd/9b/8f4fd89066ec3447a0ddd21995e44bf2.png"
-  },
-  // Add more events...
-];
-
-const categories = ["All", "Music", "Sports", "Arts", "Others"];
 const cities = ["All Cities", "Ho Chi Minh", "Hanoi", "Da Nang"];
 const prices = ["All Prices", "Under $50", "$50-$100", "Over $100"];
 
 export default function EventsPage() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedCity, setSelectedCity] = useState('All Cities');
   const [selectedPrice, setSelectedPrice] = useState('All Prices');
   const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
+
+  const fetchInitialData = async () => {
+    try {
+      setLoading(true);
+      const [eventsData, categoriesData] = await Promise.all([
+        eventService.getAll(),
+        categoryService.getAll()
+      ]);
+      setEvents(eventsData);
+      setCategories(categoriesData as Category[]);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredEvents = events.filter(event => {
+    const matchesSearch = event.eveName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         event.eveCity.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || event.catId.toString() === selectedCategory;
+    const matchesCity = selectedCity === 'All Cities' || event.eveCity === selectedCity;
+    return matchesSearch && matchesCategory && matchesCity;
+  });
+
+  if (loading) {
+    return <div>Loading...</div>; // You can create a proper loading component
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a1a1a] to-[#2d2d2d] relative overflow-hidden">
@@ -70,14 +61,6 @@ export default function EventsPage() {
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute w-96 h-96 bg-[#4CAF50]/10 rounded-full blur-3xl -top-48 -left-48" />
         <div className="absolute w-96 h-96 bg-[#FFEB3B]/10 rounded-full blur-3xl -bottom-48 -right-48" />
-      </div>
-
-      {/* Pixel art decorations */}
-      <div className="absolute top-20 right-20 w-20 h-20 animate-bounce">
-        <div className="w-full h-full bg-[#FFEB3B] rotate-45 transform" style={{boxShadow: '4px 4px 0 0 #000000'}} />
-      </div>
-      <div className="absolute bottom-20 left-20 w-16 h-16 animate-pulse">
-        <div className="w-full h-full bg-[#4CAF50] rotate-12 transform" style={{boxShadow: '4px 4px 0 0 #000000'}} />
       </div>
 
       <div className="container mx-auto px-4 py-8 relative z-10">
@@ -99,7 +82,7 @@ export default function EventsPage() {
                 <input
                   type="text"
                   placeholder="Search events..."
-                  className={`w-full px-4 py-3 pr-10 bg-white text-black rounded-xl ${pixelBorder} focus:outline-none focus:ring-2 focus:ring-[#FFEB3B]`}
+                  className={`w-full px-4 py-3 pr-10 bg-white text-black rounded-xl ${pixelBorder}`}
                   style={pixelFont}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -110,95 +93,126 @@ export default function EventsPage() {
 
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`px-6 py-3 ${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835] flex items-center gap-2 text-lg transition-all hover:shadow-[6px_6px_0_0_#000000]`}
+              className={`px-6 py-3 ${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835]`}
               style={pixelFont}
             >
-              <Filter className="w-5 h-5" />
+              <Filter className="w-5 h-5 inline-block mr-2" />
               Filters
             </button>
           </div>
 
           {showFilters && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-              {[
-                { options: categories, value: selectedCategory, onChange: setSelectedCategory },
-                { options: cities, value: selectedCity, onChange: setSelectedCity },
-                { options: prices, value: selectedPrice, onChange: setSelectedPrice }
-              ].map((filter, index) => (
-                <select
-                  key={index}
-                  value={filter.value}
-                  onChange={(e) => filter.onChange(e.target.value)}
-                  className={`px-4 py-3 bg-white text-black rounded-xl ${pixelBorder} focus:outline-none focus:ring-2 focus:ring-[#FFEB3B] cursor-pointer`}
-                  style={pixelFont}
-                >
-                  {filter.options.map(option => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-              ))}
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className={`px-4 py-3 bg-white text-black rounded-xl ${pixelBorder}`}
+                style={pixelFont}
+              >
+                <option value="all">All Categories</option>
+                {categories.map(category => (
+                  <option key={category.catId} value={category.catId.toString()}>
+                    {category.catName}
+                  </option>
+                ))}
+              </select>
+              
+              <select
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value)}
+                className={`px-4 py-3 bg-white text-black rounded-xl ${pixelBorder}`}
+                style={pixelFont}
+              >
+                <option value="All Cities">All Cities</option>
+                {cities.map(city => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
+              
+              <select
+                value={selectedPrice}
+                onChange={(e) => setSelectedPrice(e.target.value)}
+                className={`px-4 py-3 bg-white text-black rounded-xl ${pixelBorder}`}
+                style={pixelFont}
+              >
+                <option value="All Prices">All Prices</option>
+                {prices.map(price => (
+                  <option key={price} value={price}>{price}</option>
+                ))}
+              </select>
             </div>
           )}
         </div>
 
         {/* Events Grid with enhanced cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {events.map((event) => (
+          {filteredEvents.map((event) => (
             <div 
-              key={event.id} 
+              key={event.eveId} 
               className={`
                 bg-gradient-to-br from-[#4CAF50] to-[#388E3C] 
-                ${pixelBorder} 
-                transform hover:-translate-y-2 transition-all duration-300
-                hover:shadow-[8px_8px_0_0_#000000]
+                ${pixelBorder}
+                transform transition-all duration-300 hover:scale-105
+                hover:shadow-[0_0_20px_rgba(76,175,80,0.3)]
+                relative overflow-hidden
               `}
             >
-              <div className="relative h-60">
-                <Image
-                  src={event.image}
-                  alt={event.title}
-                  fill
-                  className="object-cover"
-                  quality={100}
+              {/* Decorative corner elements */}
+              <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-[#FFEB3B]" />
+              <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-[#FFEB3B]" />
+              <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-[#FFEB3B]" />
+              <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-[#FFEB3B]" />
+
+              <div className="relative h-60 group">
+                <ImageWithFallback
+                  src={event.eveThumb}
+                  alt={event.eveName}
+                  className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110" 
                 />
-                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#388E3C] to-transparent" />
+                {/* Overlay gradient on hover */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
               
-              <div className="p-6">
-                <h3 className="text-2xl font-bold text-[#FFEB3B] mb-4" style={pixelFont}>
-                  {event.title}
+              <div className="p-6 relative">
+                {/* Decorative line */}
+                <div className="absolute top-0 left-6 right-6 h-[2px] bg-[#FFEB3B]/30" />
+
+                <h3 className="text-2xl font-bold text-[#FFEB3B] mb-4 hover:text-white transition-colors duration-300" style={pixelFont}>
+                  {event.eveName}
                 </h3>
                 
                 <div className="space-y-3 mb-6">
-                  <div className="flex items-center text-white" style={pixelFont}>
-                    <Music className="mr-3 h-5 w-5 text-[#FFEB3B]" />
-                    {event.category}
+                  <div className="flex items-center text-white/90 hover:text-white transition-colors duration-200" style={pixelFont}>
+                    <Music className="mr-3 h-5 w-5 text-[#FFEB3B] animate-pulse" />
+                    {event.category?.catName}
                   </div>
-                  <div className="flex items-center text-white" style={pixelFont}>
+                  <div className="flex items-center text-white/90 hover:text-white transition-colors duration-200" style={pixelFont}>
                     <Calendar className="mr-3 h-5 w-5 text-[#FFEB3B]" />
-                    {event.date} at {event.time}
+                    {new Date(event.eveTimestart).toLocaleString()}
                   </div>
-                  <div className="flex items-center text-white" style={pixelFont}>
+                  <div className="flex items-center text-white/90 hover:text-white transition-colors duration-200" style={pixelFont}>
                     <MapPin className="mr-3 h-5 w-5 text-[#FFEB3B]" />
-                    {event.location}
-                  </div>
-                  <div className="flex items-center text-[#FFEB3B]" style={pixelFont}>
-                    <DollarSign className="mr-3 h-5 w-5" />
-                    {event.price}
+                    {event.eveCity}
                   </div>
                 </div>
 
                 <Link
-                  href={`/events/${event.id}`}
+                  href={`/events/${event.eveId}`}
                   className={`
                     block w-full text-center py-3 
-                    ${pixelBorder} bg-[#FFEB3B] text-black 
-                    hover:bg-[#FDD835] text-xl transition-all
-                    hover:shadow-[6px_6px_0_0_#000000]
+                    ${pixelBorder} 
+                    bg-[#FFEB3B] text-black
+                    hover:bg-[#FDD835] 
+                    transition-all duration-300
+                    hover:shadow-[0_0_15px_rgba(255,235,59,0.5)]
+                    relative overflow-hidden
+                    group
                   `}
                   style={pixelFont}
                 >
-                  View Details
+                  <span className="relative z-10">View Details</span>
+                  {/* Button hover effect */}
+                  <div className="absolute inset-0 bg-white transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
                 </Link>
               </div>
             </div>

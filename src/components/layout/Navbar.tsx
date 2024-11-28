@@ -35,11 +35,16 @@ export function Navbar({ onSignInClick, onSignUpClick, onSignOutClick }: NavbarP
     setUser(getStoredUser())
   }, [])
 
+  const handleSignUpClick = (e: React.MouseEvent) => {
+    e.preventDefault();  // Ngăn chặn hành vi mặc định
+    e.stopPropagation(); // Ngăn chặn sự kiện bubble up
+    onSignUpClick();
+  };
 
   return (
         <nav className={`bg-[#4CAF50] text-white py-4 ${pixelBorder}`}>
           <div className="container mx-auto px-4 flex justify-between items-center">
-            <Link href="/" className="text-3xl font-bold" style={pixelFont}>PixelTix</Link>
+            <Link href="/" className="text-3xl font-bold" style={pixelFont}>TicketHub</Link>
             <div className="hidden md:flex space-x-4">
               <Link href="/" className="hover:text-[#FFEB3B] transition-colors duration-200" style={pixelFont}>Home</Link>
               <Link href="/events" className="hover:text-[#FFEB3B] transition-colors duration-200" style={pixelFont}>Events</Link>
@@ -73,17 +78,23 @@ export function Navbar({ onSignInClick, onSignUpClick, onSignOutClick }: NavbarP
               </DropdownMenu></>
               ) : (
                 <>
-      
-                 <Button onClick={onSignInClick} className={`${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835] text-xl hidden md:flex`} style={pixelFont}>
+                  <Button 
+                    onClick={onSignInClick} 
+                    type="button"
+                    className={`${pixelBorder} bg-[#FFEB3B] text-black hover:bg-[#FDD835] text-xl hidden md:flex`} 
+                    style={pixelFont}
+                  >
                     Sign In
                   </Button>
-              <Button onClick={onSignUpClick} className={`${pixelBorder} bg-[#F44336] text-white hover:bg-[#D32F2F] text-xl`} style={pixelFont}>
+                  <Button 
+                    onClick={handleSignUpClick} 
+                    type="button"
+                    className={`${pixelBorder} bg-[#F44336] text-white hover:bg-[#D32F2F] text-xl`} 
+                    style={pixelFont}
+                  >
                     Sign Up
                   </Button>
-               
-
                 </>
-                
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

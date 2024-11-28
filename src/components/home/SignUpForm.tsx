@@ -1,18 +1,48 @@
+'use client';
+
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
+import { authService } from "@/services/authService";
 
 const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]"
 const pixelFont = { fontFamily: "'Pixelify Sans', sans-serif" }
 
+// Thêm interface cho response
+interface RegisterResponse {
+    userId: number;
+    userName: string;
+    firstName: string;
+    lastName: string;
+    userEmail: string;
+    userRole: string;
+    userJoinDate: string;
+    totalTickets: number;
+    totalSpent: number;
+    status: 'success' | 'error';
+    message: string;
+}
+
+interface ApiError {
+    response?: {
+        data: {
+            status: 'error';
+            message: string;
+            errors?: Record<string, string>;
+        };
+    };
+    message: string;
+}
+
 export default function SignUpForm({ onClose }: { onClose: () => void }) {
     const [formData, setFormData] = useState({
-        username: '',
+        userName: '',
         firstName: '',
         lastName: '',
-        email: '',
-        password: '',
+        userEmail: '',
+        userPassword: '',
         confirmPassword: ''
     });
 
@@ -40,7 +70,7 @@ export default function SignUpForm({ onClose }: { onClose: () => void }) {
             terms: ''
         };
 
-        if (!formData.username.trim()) {
+        if (!formData.userName.trim()) {
             newErrors.username = 'Username is required';
             isValid = false;
         }
@@ -55,23 +85,23 @@ export default function SignUpForm({ onClose }: { onClose: () => void }) {
             isValid = false;
         }
 
-        if (!formData.email.trim()) {
+        if (!formData.userEmail.trim()) {
             newErrors.email = 'Email is required';
             isValid = false;
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        } else if (!/\S+@\S+\.\S+/.test(formData.userEmail)) {
             newErrors.email = 'Email is invalid';
             isValid = false;
         }
 
-        if (!formData.password) {
+        if (!formData.userPassword) {
             newErrors.password = 'Password is required';
             isValid = false;
-        } else if (formData.password.length < 6) {
+        } else if (formData.userPassword.length < 6) {
             newErrors.password = 'Password must be at least 6 characters';
             isValid = false;
         }
 
-        if (formData.password !== formData.confirmPassword) {
+        if (formData.userPassword !== formData.confirmPassword) {
             newErrors.confirmPassword = 'Passwords do not match';
             isValid = false;
         }
@@ -85,18 +115,119 @@ export default function SignUpForm({ onClose }: { onClose: () => void }) {
         return isValid;
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (validateForm()) {
-            onClose();
+            try {
+                const signUpData = {
+                    userName: formData.userName,
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    userEmail: formData.userEmail,
+                    userPassword: formData.userPassword,
+                    confirmPassword: formData.confirmPassword
+                };
+
+                const response = await authService.register(signUpData) as RegisterResponse;
+                
+                if (response.status === 'error') {
+                    toast.error(response.message);
+                    
+                    if (response.message.includes('Email')) {
+                        setErrors(prev => ({
+                            ...prev,
+                            email: response.message
+                        }));
+                    } else if (response.message.includes('Username')) {
+                        setErrors(prev => ({
+                            ...prev,
+                            username: response.message
+                        }));
+                    }
+                    return;
+                }
+
+                const loginData = {
+                    userEmail: formData.userEmail,
+                    userPassword: formData.userPassword
+                };
+
+                const loginResponse = await authService.login(loginData);
+
+                if (loginResponse) {
+                    toast.success('Registration successful! You are now logged in.');
+                    onClose();
+                    window.location.reload();
+                }
+            } catch (error: unknown) {
+                console.error('Registration error:', error);
+                
+                // Type guard để kiểm tra error
+                const isApiError = (error: unknown): error is ApiError => {
+                    return (
+                        typeof error === 'object' &&
+                        error !== null &&
+                        'response' in error &&
+                        error.response !== undefined
+                    );
+                };
+                
+                if (isApiError(error)) {
+                    if (error.response?.data) {
+                        const errorData = error.response.data;
+                        
+                        if (errorData.status === 'error') {
+                            toast.error(errorData.message);
+                            
+                            if (errorData.message.includes('Email')) {
+                                setErrors(prev => ({
+                                    ...prev,
+                                    email: errorData.message
+                                }));
+                            } else if (errorData.message.includes('Username')) {
+                                setErrors(prev => ({
+                                    ...prev,
+                                    username: errorData.message
+                                }));
+                            }
+                        } else if (errorData.errors) {
+                            const serverErrors = errorData.errors;
+                            const newErrors = { ...errors };
+                            
+                            Object.keys(serverErrors).forEach(key => {
+                                const errorKey = key.toLowerCase();
+                                if (errorKey in newErrors) {
+                                    newErrors[errorKey as keyof typeof errors] = serverErrors[key];
+                                }
+                            });
+                            
+                            setErrors(newErrors);
+                            toast.error('Please check the form for errors.');
+                        }
+                    }
+                } else {
+                    toast.error('An error occurred during registration. Please try again.');
+                }
+            }
         }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
+        const fieldMapping: { [key: string]: string } = {
+            username: 'userName',
+            email: 'userEmail',
+            password: 'userPassword',
+            firstName: 'firstName',
+            lastName: 'lastName',
+            confirmPassword: 'confirmPassword'
+        };
+
+        const stateField = fieldMapping[name] || name;
+        
         setFormData(prev => ({
             ...prev,
-            [name]: value
+            [stateField]: value
         }));
     };
 
@@ -106,7 +237,7 @@ export default function SignUpForm({ onClose }: { onClose: () => void }) {
                 type="text"
                 name="username"
                 placeholder="Username"
-                value={formData.username}
+                value={formData.userName}
                 onChange={handleChange}
                 className={`
                     w-full
@@ -172,7 +303,7 @@ export default function SignUpForm({ onClose }: { onClose: () => void }) {
                 type="email"
                 name="email"
                 placeholder="Email"
-                value={formData.email}
+                value={formData.userEmail}
                 onChange={handleChange}
                 className={`
                     w-full
@@ -194,7 +325,7 @@ export default function SignUpForm({ onClose }: { onClose: () => void }) {
                 type="password"
                 name="password"
                 placeholder="Password"
-                value={formData.password}
+                value={formData.userPassword}
                 onChange={handleChange}
                 className={`
                     w-full
