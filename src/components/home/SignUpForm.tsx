@@ -6,7 +6,6 @@ import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { authService } from "@/services/authService";
-import { useRouter } from 'next/navigation';
 
 const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]"
 const pixelFont = { fontFamily: "'Pixelify Sans', sans-serif" }
@@ -26,8 +25,18 @@ interface RegisterResponse {
     message: string;
 }
 
+interface ApiError {
+    response?: {
+        data: {
+            status: 'error';
+            message: string;
+            errors?: Record<string, string>;
+        };
+    };
+    message: string;
+}
+
 export default function SignUpForm({ onClose }: { onClose: () => void }) {
-    const router = useRouter();
     const [formData, setFormData] = useState({
         userName: '',
         firstName: '',
@@ -150,39 +159,51 @@ export default function SignUpForm({ onClose }: { onClose: () => void }) {
                     onClose();
                     window.location.reload();
                 }
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Registration error:', error);
                 
-                if (error.response?.data) {
-                    const errorData = error.response.data;
-                    
-                    if (errorData.status === 'error') {
-                        toast.error(errorData.message);
+                // Type guard để kiểm tra error
+                const isApiError = (error: unknown): error is ApiError => {
+                    return (
+                        typeof error === 'object' &&
+                        error !== null &&
+                        'response' in error &&
+                        error.response !== undefined
+                    );
+                };
+                
+                if (isApiError(error)) {
+                    if (error.response?.data) {
+                        const errorData = error.response.data;
                         
-                        if (errorData.message.includes('Email')) {
-                            setErrors(prev => ({
-                                ...prev,
-                                email: errorData.message
-                            }));
-                        } else if (errorData.message.includes('Username')) {
-                            setErrors(prev => ({
-                                ...prev,
-                                username: errorData.message
-                            }));
-                        }
-                    } else if (errorData.errors) {
-                        const serverErrors = errorData.errors;
-                        const newErrors = { ...errors };
-                        
-                        Object.keys(serverErrors).forEach(key => {
-                            const errorKey = key.toLowerCase();
-                            if (errorKey in newErrors) {
-                                newErrors[errorKey as keyof typeof errors] = serverErrors[key];
+                        if (errorData.status === 'error') {
+                            toast.error(errorData.message);
+                            
+                            if (errorData.message.includes('Email')) {
+                                setErrors(prev => ({
+                                    ...prev,
+                                    email: errorData.message
+                                }));
+                            } else if (errorData.message.includes('Username')) {
+                                setErrors(prev => ({
+                                    ...prev,
+                                    username: errorData.message
+                                }));
                             }
-                        });
-                        
-                        setErrors(newErrors);
-                        toast.error('Please check the form for errors.');
+                        } else if (errorData.errors) {
+                            const serverErrors = errorData.errors;
+                            const newErrors = { ...errors };
+                            
+                            Object.keys(serverErrors).forEach(key => {
+                                const errorKey = key.toLowerCase();
+                                if (errorKey in newErrors) {
+                                    newErrors[errorKey as keyof typeof errors] = serverErrors[key];
+                                }
+                            });
+                            
+                            setErrors(newErrors);
+                            toast.error('Please check the form for errors.');
+                        }
                     }
                 } else {
                     toast.error('An error occurred during registration. Please try again.');

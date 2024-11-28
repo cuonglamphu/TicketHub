@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CreateTicketDto, Ticket, Type } from '@/types/ticket';
+import { CreateTicketDto, Ticket } from '@/types/ticket';
 import { Event as CustomEvent } from '@/types/event';
 import { ticketService } from '@/services/ticketService';
 import { eventService } from '@/services/eventService';
@@ -63,7 +63,6 @@ export default function TicketsPage() {
   const [events, setEvents] = useState<CustomEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [Categories, setCategories] = useState<Category[]>([]);
-  const [types, setTypes] = useState<Type[]>([]);
   const stats = [
     { label: 'Total Revenue', value: '$50,000', trend: '+15%', icon: Tag },
     { label: 'Tickets Sold', value: '1,234', trend: '+8%', icon: Users },

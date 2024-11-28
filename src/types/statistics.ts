@@ -47,4 +47,18 @@ export interface Statistics {
       change: number;
     };
   }
+
+export interface Forecast {
+    targetAmount: number;
+    currentProgress: number;
+    progressPercentage: number;
+    amountNeeded: number;
+    growthRate: number;
+    note: string;
+}
+
+export interface GrowthRate {
+    currentRate: number;
+    targetRate: number;
+}
   

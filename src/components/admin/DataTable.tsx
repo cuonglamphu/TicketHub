@@ -18,7 +18,7 @@ interface Column<T> {
   label: string;
   sortable?: boolean;
   render?: (item: T) => React.ReactNode;
-  formatter?: (value: any) => string;
+  formatter?: (value: T[keyof T]) => string;
 }
 
 interface DataTableProps<T> {

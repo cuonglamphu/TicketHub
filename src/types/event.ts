@@ -1,3 +1,5 @@
+import { Ticket } from "./ticket"
+
 export interface HotEvent {
   id: number
   name: string
@@ -22,7 +24,7 @@ export interface RecommendedEvent {
   eveTimestart: string;
   eveCity: string;
   eveThumb?: string;
-  tickets?: any[];
+  tickets?: Ticket[] | null;
   category?: {
     catId: number;
     catName: string;
@@ -77,5 +79,3 @@ export interface CreateEventDto {
   eveTimeend: string;
   catId: number;
 }
-
-export interface UpdateEventDto extends CreateEventDto {}

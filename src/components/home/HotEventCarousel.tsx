@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { RecommendedEvent } from "@/types/event"
 import { HotEventCarouselSkeleton } from "./HotEventCarouselSkeleton"

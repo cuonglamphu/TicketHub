@@ -24,7 +24,7 @@ export function ImageWithFallback({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
-  let imageSrc = typeof src === 'string' && (src.startsWith('http') || src.startsWith('/')) ? 
+  const imageSrc = typeof src === 'string' && (src.startsWith('http') || src.startsWith('/')) ? 
     src : '/vinhan.gif';
 
   if (hasError) {

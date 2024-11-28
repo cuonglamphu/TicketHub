@@ -13,7 +13,7 @@ interface UserFormProps {
   isOpen: boolean;
   onClose: () => void;
   user: User | null;
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: UserFormData) => Promise<void>;
 }
 
 type UserFormData = {

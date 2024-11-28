@@ -25,6 +25,7 @@ export default function UsersPage() {
       const data = await userService.getAll();
       setUsers(data);
     } catch (error) {
+      console.error('Failed to fetch users', error);
       toast.error('Failed to fetch users');
     } finally {
       setLoading(false);
@@ -38,6 +39,7 @@ export default function UsersPage() {
       fetchUsers();
       setIsUserFormOpen(false);
     } catch (error) {
+      console.error('Failed to create user', error);
       toast.error('Failed to create user');
     }
   };
@@ -49,6 +51,7 @@ export default function UsersPage() {
       fetchUsers();
       setIsUserFormOpen(false);
     } catch (error) {
+      console.error('Failed to update user', error);
       toast.error('Failed to update user');
     }
   };
@@ -60,6 +63,7 @@ export default function UsersPage() {
         toast.success('User deleted successfully');
         fetchUsers();
       } catch (error) {
+        console.error('Failed to delete user', error);
         toast.error('Failed to delete user');
       }
     }
@@ -69,7 +73,7 @@ export default function UsersPage() {
     key: keyof User;
     label: string;
     sortable?: boolean;
-    formatter?: (value: any) => string;
+    formatter?: (value: string | number | Date) => string;
   };
   
   const columns: Column[] = [
@@ -80,19 +84,24 @@ export default function UsersPage() {
       key: 'userJoinDate', 
       label: 'Join Date', 
       sortable: true,
-      formatter: (value: string) => new Date(value).toLocaleDateString()
+      formatter: (value: string | number | Date) => new Date(value).toLocaleDateString()
     },
     { 
       key: 'totalTickets', 
-      label: 'Tickets', 
+      label: 'Tickets',
       sortable: true,
-      formatter: (value: number) => value.toString()
+      formatter: (value: string | number | Date) => value.toString()
     },
     { 
       key: 'totalSpent', 
       label: 'Total Spent', 
       sortable: true,
-      formatter: (value: number) => `$${value.toFixed(2)}`
+      formatter: (value: string | number | Date) => {
+        if (typeof value === 'number') {
+          return `$${value.toFixed(2)}`;
+        }
+        return `$0.00`;
+      }
     },
   ] as const;
 

@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
-import Image from 'next/image';
+import { useState, useEffect, use, useCallback } from 'react';
 import { Calendar, MapPin, Clock, Ticket, Share2, Heart } from 'lucide-react';
 import { getStoredUser } from '@/utils/auth';
 import { Modal } from "@/components/modals/Modal";
@@ -27,15 +26,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
   const [loading, setLoading] = useState(true);
   const [ticketDisplays, setTicketDisplays] = useState<TicketDisplay[]>([]);
 
-  useEffect(() => {
-    console.log(resolvedParams.id)
-    if (resolvedParams.id) {
-      fetchEventData();
-      fetchTicketData();
-    }
-  }, [resolvedParams.id]);
-
-  const fetchEventData = async () => {
+  const fetchEventData = useCallback(async () => {
     try {
       setLoading(true);
       const eventData = await eventService.getById(Number(resolvedParams.id));
@@ -46,9 +37,9 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
     } finally {
       setLoading(false);
     }
-  };
+  }, [resolvedParams.id]);
 
-  const fetchTicketData = async () => {
+  const fetchTicketData = useCallback(async () => {
     try {
       const tickets: TicketType[] = await ticketService.getByEventId(Number(resolvedParams.id));
       console.log("Fetched tickets:", tickets);
@@ -56,13 +47,9 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
       const typeMap = new Map<number, Type>();
       
       for (const ticket of tickets) {
-        console.log("Processing ticket:", ticket);
-        console.log("TypeId:", ticket.TypeId, "typeId:", ticket.typeId); // Check both cases
-        
-        const typeId = ticket.TypeId || ticket.typeId; // Handle both cases
+        const typeId = ticket.TypeId || ticket.typeId;
         if (!typeMap.has(typeId)) {
           const typeInfo = await typeService.getById(typeId);
-          console.log("Type info for", typeId, ":", typeInfo);
           typeMap.set(typeId, typeInfo);
         }
       }
@@ -70,8 +57,6 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
       const displays: TicketDisplay[] = tickets.map(ticket => {
         const typeId = ticket.TypeId || ticket.typeId;
         const typeInfo = typeMap.get(typeId);
-        console.log("Creating display for ticket:", ticket);
-        console.log("Type info found:", typeInfo);
         
         return {
           ticketId: ticket.TicketId || ticket.ticketId,
@@ -81,13 +66,19 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
         };
       });
 
-      console.log("Final displays:", displays);
       setTicketDisplays(displays);
     } catch (error) {
       console.error('Error fetching ticket data:', error);
       toast.error('Failed to load ticket information');
     }
-  };
+  }, [resolvedParams.id]);
+
+  useEffect(() => {
+    if (resolvedParams.id) {
+      fetchEventData();
+      fetchTicketData();
+    }
+  }, [resolvedParams.id, fetchEventData, fetchTicketData]);
 
   const handleBuyTickets = () => {
     const user = getStoredUser();

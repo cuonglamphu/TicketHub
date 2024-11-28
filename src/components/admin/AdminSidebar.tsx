@@ -14,7 +14,7 @@ import {
   ChevronLeft,
   LogOut
 } from "lucide-react";
-import { cn, pixelBorder, pixelFont } from "@/lib/utils";
+import { cn, pixelFont } from "@/lib/utils";
 import { Button } from "../ui/button";
 import Image from "next/image";
 

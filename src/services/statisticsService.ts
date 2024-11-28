@@ -1,4 +1,4 @@
-import { Statistics } from '@/types/statistics';
+import { Forecast, GrowthRate, Statistics } from '@/types/statistics';
 
 export const statisticsService = {
   async getStatistics(): Promise<Statistics> {
@@ -7,6 +7,7 @@ export const statisticsService = {
       if (!response.ok) throw new Error('Failed to fetch statistics');
       return await response.json();
     } catch (error) {
+      console.error('Failed to fetch statistics data', error);
       throw new Error('Failed to fetch statistics data');
     }
   },
@@ -22,7 +23,7 @@ export const statisticsService = {
         value: `$${stats.quarterForecast.currentProgress.toLocaleString()}`,
         progress: quarterProgress.progressPercentage,
         trend: `${this.formatTrend(stats.quarterForecast.growthRate)}`,
-        details: this.generateForecastDetails(stats.quarterForecast),
+        details: this.generateForecastDetails(stats.quarterForecast ),
         status: quarterProgress.status
       },
       { 
@@ -44,7 +45,7 @@ export const statisticsService = {
     ];
   },
 
-   calculateProgress(forecast: any) {
+   calculateProgress(forecast: Forecast) {
     const percentage = (forecast.currentProgress / forecast.targetAmount) * 100;
     return {
       progressPercentage: Math.min(percentage, 100).toFixed(1),
@@ -52,7 +53,7 @@ export const statisticsService = {
     };
   },
 
-   analyzeGrowthRate(growth: any) {
+   analyzeGrowthRate(growth: GrowthRate) {
     const percentage = (growth.currentRate / growth.targetRate) * 100;
     return {
       progressPercentage: Math.min(percentage, 100).toFixed(1),
@@ -71,9 +72,9 @@ export const statisticsService = {
     return value >= 0 ? `+${value.toFixed(1)}%` : `${value.toFixed(1)}%`;
   },
 
-   generateForecastDetails(forecast: any): string {
+   generateForecastDetails(forecast: Forecast): string {
     const remaining = forecast.targetAmount - forecast.currentProgress;
-    const timeLeft = this.calculateTimeLeft(forecast.endDate);
+    const timeLeft = this.calculateTimeLeft(forecast.note);
     
     if (remaining <= 0) {
       return `Target achieved! Exceeding by $${Math.abs(remaining).toLocaleString()}`;
@@ -82,7 +83,7 @@ export const statisticsService = {
     return `$${remaining.toLocaleString()} needed in ${timeLeft}`;
   },
 
-   generateGrowthMessage(growth: any): string {
+   generateGrowthMessage(growth: GrowthRate): string {
     const diff = growth.currentRate - growth.targetRate;
     if (diff >= 0) {
       return `Exceeding target by ${diff.toFixed(1)}%`;

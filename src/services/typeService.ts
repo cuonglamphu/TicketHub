@@ -1,6 +1,16 @@
 import axios from 'axios';
 import { Type } from '@/types/ticket';
 
+interface ApiError {
+  response?: {
+    data: {
+      message: string;
+    };
+    status: number;
+  };
+  message: string;
+}
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const typeService = {
@@ -17,11 +27,12 @@ export const typeService = {
       
       const response = await axios.post(`${API_URL}/type`, requestData);
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
       console.error('API Error Details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
+        message: apiError.message,
+        response: apiError.response?.data,
+        status: apiError.response?.status
       });
       throw error;
     }

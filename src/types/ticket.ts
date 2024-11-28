@@ -13,41 +13,56 @@ export interface Type {
     typeName: string;
     typeDesc: string;
     eventId: number;
-  }
-  
-  export interface Ticket {
-    [x: string]: any;
+}
+
+export interface Ticket {
     TicketId: number;
     TicketPrice: number;
     TicketQty: number;
     EveId: number;
     TypeId: number;
-  }
-  
-  export interface CreateTicketDto {
+    event?: {
+        eveId: number;
+        eveName: string;
+        eveThumb: string;
+        eveTimestart: string;
+        eveCity: string;
+    };
+    type?: {
+        typeId: number;
+        typeName: string;
+    };
+    ticket_id?: number;
+    ticket_price?: number;
+    ticket_qty?: number;
+    eve_id?: number;
+    type_id?: number;
+}
+
+export interface CreateTicketDto {
     TicketQty: number;
     TicketPrice: number;
     EveId: number;
     TypeId: number;
-  }
-  
-  export interface UpdateTicketDto {
+}
+
+export interface UpdateTicketDto {
     TicketQty?: number;
     TicketPrice?: number;
     EveId?: number;
     TypeId?: number;
-  }
-  
-  export interface TicketFormProps {
+}
+
+export interface TicketFormProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (data: CreateTicketDto) => Promise<void>;
     ticket: Ticket | null;
     categories: Category[];
     events: CustomEvent[];
-  }
-  
-  export interface TicketPurchase {
+}
+
+export interface TicketPurchase {
     purchaseId: number;
     userId: number;
     ticketId: number;
@@ -70,4 +85,4 @@ export interface Type {
             typeName: string;
         };
     };
-  } 
+} 

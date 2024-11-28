@@ -3,17 +3,13 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import Image from 'next/image'
 import { Calendar, MapPin, Ticket, Filter } from 'lucide-react'
 import { getStoredUser } from '@/utils/auth'
 import { useRouter } from 'next/navigation'
 import { TicketDetailsModal } from '@/components/modals/TicketDetailsModal'
 import { purchaseService } from '@/services/purchaseService'
 import { PurchaseDisplay } from '@/types/purchase'
-import TicketsLoading from './loading'
 import { Skeleton } from "@/components/ui/skeleton"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search } from 'lucide-react'
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
 
@@ -26,7 +22,7 @@ export default function TicketsPage() {
   const [isTicketDetailsModalOpen, setIsTicketDetailsModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
-  const [isMobile, setIsMobile] = useState(false)
+  const [, setIsMobile] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('all')
   const [filterCity, setFilterCity] = useState('all')

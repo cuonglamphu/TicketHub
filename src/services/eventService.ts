@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Event, CreateEventDto, UpdateEventDto, RecommendedEvent, HotEvent } from '@/types/event';
+import { Event, CreateEventDto, RecommendedEvent } from '@/types/event';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -33,7 +33,7 @@ export const eventService = {
     return response.data;
   },
 
-  update: async (id: number, data: UpdateEventDto) => {
+  update: async (id: number, data: CreateEventDto) => {
     const response = await axios.put<Event>(`${API_URL}/event/${id}`, data);
     return response.data;
   },

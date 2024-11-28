@@ -9,6 +9,9 @@ interface PurchaseRequest {
     data: {
         ticketId: number;
         quantity: number;
+        ipAddress: string;
+        deviceInfo: string;
+        browserInfo: string;
     };
 }
 

@@ -1,8 +1,9 @@
 export interface Purchase {
-    ticketId: number;
+    eventId: number;
     eventName: string;
     eventCity: string;
     eventTimeStart: string;
+    ticketId: number;
     ticketType: string;
     quantity: number;
     price: number;
@@ -22,6 +23,9 @@ export interface Purchase {
     ticketId: number;
     quantity: number;
     userId: number;
+    ipAddress: string;
+    deviceInfo: string;
+    browserInfo: string;
   }
 
   export interface PurchaseDisplay {

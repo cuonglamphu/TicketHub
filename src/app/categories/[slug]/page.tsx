@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Calendar, MapPin } from 'lucide-react';
@@ -18,11 +18,7 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
   const [loading, setLoading] = useState(true);
   const [categoryName, setCategoryName] = useState('');
 
-  useEffect(() => {
-    fetchCategoryEvents();
-  }, [resolvedParams.slug]);
-
-  const fetchCategoryEvents = async () => {
+  const fetchCategoryEvents = useCallback(async () => {
     try {
       setLoading(true);
       const category = await categoryService.getBySlug(resolvedParams.slug);
@@ -37,7 +33,11 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
     } finally {
       setLoading(false);
     }
-  };
+  }, [resolvedParams.slug]);
+
+  useEffect(() => {
+    fetchCategoryEvents();
+  }, [fetchCategoryEvents]);
 
   if (loading) {
     return (

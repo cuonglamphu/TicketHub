@@ -67,7 +67,7 @@ export default function EventsPage() {
   const [editingEvent, setEditingEvent] = useState<Event | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [loading, setLoading] = useState(true);
+  const [ ,setLoading] = useState(true);
 
   useEffect(() => {
     fetchInitialData();

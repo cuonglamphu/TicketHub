@@ -7,6 +7,7 @@ export const saleService = {
       if (!response.ok) throw new Error('Failed to fetch sales');
       return await response.json();
     } catch (error) {
+      console.error('Failed to fetch sales data', error);
       throw new Error('Failed to fetch sales data');
     }
   },
@@ -17,6 +18,7 @@ export const saleService = {
       if (!response.ok) throw new Error('Failed to fetch sale');
       return await response.json();
     } catch (error) {
+      console.error('Failed to fetch sale data', error);
       throw new Error('Failed to fetch sale data');
     }
   }

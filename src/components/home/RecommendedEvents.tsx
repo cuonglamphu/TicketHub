@@ -1,8 +1,7 @@
 import { Calendar, MapPin } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { RecommendedEvent } from "@/types/event"
 import Image from 'next/image'
+
 interface RecommendedEventsProps {
   events: RecommendedEvent[]
   onViewDetails: (event: RecommendedEvent) => void
@@ -12,7 +11,7 @@ interface RecommendedEventsProps {
 const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000] hover:shadow-[6px_6px_0_0_#000000] transition-all duration-200 hover:translate-x-[-2px] hover:translate-y-[-2px]"
 const pixelFont = { fontFamily: "'Press Start 2P', cursive" }
 
-export function RecommendedEvents({ events, onViewDetails, onBuyTickets }: RecommendedEventsProps) {
+export function RecommendedEvents({ events, onViewDetails, }: RecommendedEventsProps) {
   return (
     <div className="mt-8 pixel-bg p-8 rounded-lg" style={pixelFont}>
       <h2 className="text-2xl font-bold mb-6 text-[#FFEB3B] pixel-text-shadow animate-pulse">
@@ -24,11 +23,15 @@ export function RecommendedEvents({ events, onViewDetails, onBuyTickets }: Recom
             key={event.eveId} 
             className={`${pixelBorder} bg-[#4A4A4A] rounded-lg overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105`}
           >
-            <div className="relative">
-              <img
+            <div className="relative w-full h-48">
+              <Image
                 src={event.eveThumb || '/default-image.jpg'}
                 alt={event.eveName}
-                className="w-full h-48 object-cover pixelated"
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                className="object-cover pixelated"
+                priority={false}
+                quality={75}
               />
               <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-black/50" />
             </div>

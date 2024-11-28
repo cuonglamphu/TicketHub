@@ -8,27 +8,39 @@ import { toast } from 'sonner';
 import { ticketService } from '@/services/ticketService';
 import { getStoredUser } from '@/utils/auth';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Purchase } from '@/types/purchase';
 
 const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]";
 const pixelFont = { fontFamily: "'VT323', monospace" };
+
+interface ApiError {
+    response?: {
+        status: number;
+        data: {
+            message: string;
+        };
+    };
+    message: string;
+}
 
 export default function ConfirmPurchasePage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isProcessing, setIsProcessing] = useState(false);
     const [purchaseStatus, setPurchaseStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
-    const [purchaseDetails, setPurchaseDetails] = useState<any>(null);
+    const [purchaseDetails, setPurchaseDetails] = useState<Purchase | null>(null);
 
     useEffect(() => {
-        // Lấy thông tin từ URL parameters
-        const details = {
-            eventId: searchParams.get('eventId'),
-            eventName: searchParams.get('eventName'),
-            ticketId: searchParams.get('ticketId'),
-            ticketType: searchParams.get('ticketType'),
+        const details: Purchase = {
+            eventId: Number(searchParams.get('eventId')),
+            eventName: searchParams.get('eventName') || '',
+            ticketId: Number(searchParams.get('ticketId')),
+            ticketType: searchParams.get('ticketType') || '',
             quantity: Number(searchParams.get('quantity')),
             total: Number(searchParams.get('total')),
-            unitPrice: Number(searchParams.get('unitPrice'))
+            price: Number(searchParams.get('unitPrice')),
+            eventCity: searchParams.get('eventCity') || '',
+            eventTimeStart: searchParams.get('eventTimeStart') || ''
         };
         setPurchaseDetails(details);
     }, [searchParams]);
@@ -48,11 +60,18 @@ export default function ConfirmPurchasePage() {
                 return;
             }
 
+            const ipAddress = await getIPAddress();
+            const deviceInfo = getDeviceInfo();
+            const browserInfo = getBrowserInfo();
+
             const response = await ticketService.purchaseTicket({
                 userId: user.userId,
                 data: {
-                    ticketId: purchaseDetails.ticketId,
-                    quantity: purchaseDetails.quantity
+                    ticketId: purchaseDetails!.ticketId,
+                    quantity: purchaseDetails!.quantity,
+                    ipAddress: ipAddress,
+                    deviceInfo: JSON.stringify(deviceInfo),
+                    browserInfo: JSON.stringify(browserInfo)
                 }
             });
 
@@ -66,10 +85,21 @@ export default function ConfirmPurchasePage() {
                 }, 3000);
             }
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             setPurchaseStatus('error');
             console.error('Purchase failed:', error);
-            if (error.response?.status === 400) {
+            
+            // Type guard để kiểm tra error có phải là ApiError không
+            const isApiError = (error: unknown): error is ApiError => {
+                return (
+                    typeof error === 'object' &&
+                    error !== null &&
+                    'response' in error &&
+                    typeof (error as ApiError).response?.status === 'number'
+                );
+            };
+
+            if (isApiError(error) && error.response?.status === 400) {
                 toast.error(error.response.data.message || 'Not enough tickets available');
             } else {
                 toast.error('Purchase failed. Please try again.');
@@ -77,6 +107,61 @@ export default function ConfirmPurchasePage() {
         } finally {
             setIsProcessing(false);
         }
+    };
+
+    const getIPAddress = async () => {
+        try {
+            const response = await fetch('https://api.ipify.org?format=json');
+            const data = await response.json();
+            return data.ip;
+        } catch (error) {
+            console.error('Failed to get IP address:', error);
+            return 'unknown';
+        }
+    };
+
+    const getDeviceInfo = () => {
+        const ua = navigator.userAgent;
+        const platform = navigator.platform;
+        const screenRes = `${window.screen.width}x${window.screen.height}`;
+        const devicePixelRatio = window.devicePixelRatio;
+        
+        return {
+            platform,
+            screenResolution: screenRes,
+            pixelRatio: devicePixelRatio,
+            isMobile: /Mobile|Android|iPhone|iPad|iPod/i.test(ua),
+            isTablet: /(tablet|ipad|playbook|silk)|(android(?!.*mobile))/i.test(ua)
+        };
+    };
+
+    const getBrowserInfo = () => {
+        const ua = navigator.userAgent;
+        let browserName = "Unknown";
+        let browserVersion = "Unknown";
+
+        // Detect browser name and version
+        if (ua.indexOf("Firefox") > -1) {
+            browserName = "Firefox";
+            browserVersion = ua.match(/Firefox\/([0-9.]+)/)?.[1] || "";
+        } else if (ua.indexOf("Chrome") > -1) {
+            browserName = "Chrome";
+            browserVersion = ua.match(/Chrome\/([0-9.]+)/)?.[1] || "";
+        } else if (ua.indexOf("Safari") > -1) {
+            browserName = "Safari";
+            browserVersion = ua.match(/Version\/([0-9.]+)/)?.[1] || "";
+        } else if (ua.indexOf("Edge") > -1) {
+            browserName = "Edge";
+            browserVersion = ua.match(/Edge\/([0-9.]+)/)?.[1] || "";
+        }
+
+        return {
+            name: browserName,
+            version: browserVersion,
+            language: navigator.language,
+            cookiesEnabled: navigator.cookieEnabled,
+            userAgent: ua
+        };
     };
 
     const renderProcessingState = () => {
@@ -178,7 +263,7 @@ export default function ConfirmPurchasePage() {
                             <p>Event: {purchaseDetails.eventName}</p>
                             <p>Ticket Type: {purchaseDetails.ticketType}</p>
                             <p>Quantity: {purchaseDetails.quantity}</p>
-                            <p>Price per ticket: ${purchaseDetails.unitPrice}</p>
+                            <p>Price per ticket: ${purchaseDetails.price}</p>
                             <p className="text-xl text-[#FFEB3B] pt-2">
                                 Total: ${purchaseDetails.total}
                             </p>

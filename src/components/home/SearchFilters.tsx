@@ -22,14 +22,6 @@ const COMMON_INPUT_STYLES = `
   text-lg
 `
 
-// Data
-const CITIES = [
-  { value: 'new-york', label: 'New York' },
-  { value: 'los-angeles', label: 'Los Angeles' },
-  { value: 'tokyo', label: 'Tokyo' },
-  { value: 'london', label: 'London' },
-]
-
 // Types
 interface City {
   id: string;
@@ -56,7 +48,6 @@ export function SearchFilters({
   city,
   date,
   categories,
-  cities,
   onSearchTermChange,
   onCategoryChange,
   onCityChange,

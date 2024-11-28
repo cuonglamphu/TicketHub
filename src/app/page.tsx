@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Dispatch, SetStateAction } from 'react'
+import { useState, useEffect } from 'react'
 import { Navbar } from "@/components/layout/Navbar"
 import { Modal } from "@/components/modals/Modal"
 import { EventDetailsModal } from "@/components/modals/EventDetailsModal"
@@ -18,7 +18,6 @@ import { Category } from '@/types/category'
 import { categoryService } from '@/services/categoryService'
 import { useRouter } from 'next/navigation'
 import { HotEventCarouselSkeleton } from "@/components/home/HotEventCarouselSkeleton"
-import Image from 'next/image'
 
 interface City {
   id: string;
@@ -38,10 +37,11 @@ export default function HomePage() {
   const [hotEventsList, setHotEventsList] = useState<RecommendedEvent[]>([])
   const [recommendedEventsList, setRecommendedEventsList] = useState([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [cities, setCities] = useState<City[]>([])
+  const [cities] = useState<City[]>([])
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const user = getStoredUser()
+  const userId = user?.userId
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export default function HomePage() {
         const [hotEventsData, categoriesData, recommendedEventsData] = await Promise.all([
           eventService.getHotEvents(),
           categoryService.getAll(),
-          eventService.getRecommendedEvents(user?.userId || 0)
+          eventService.getRecommendedEvents(userId || 0)
         ])
 
         if (Array.isArray(hotEventsData)) {
@@ -103,7 +103,7 @@ export default function HomePage() {
     }
 
     fetchInitialData()
-  }, [])
+  }, [userId])
 
   useEffect(() => {
     console.log('Current hotEventsList:', hotEventsList);

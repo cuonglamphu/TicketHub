@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { authService } from "@/services/authService";
 
 const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]"
-const pixelFont = { fontFamily: "'Pixelify Sans', sans-serif" }
 
 export default function SignInForm({ onClose }: { onClose: () => void } ) {
     const [formData, setFormData] = useState({

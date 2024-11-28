@@ -25,7 +25,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { Bar, Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -113,6 +112,7 @@ export default function SalesPage() {
       setPredictions(statisticsService.calculatePredictions(statsData));
       setAiSuggestions(analysisService.getAiSuggestions(statsData));
     } catch (error) {
+      console.error('Failed to fetch data', error);
       toast.error('Failed to fetch data');
     } finally {
       setLoading(false);
@@ -130,6 +130,7 @@ export default function SalesPage() {
       const analysis = analysisService.analyzeTarget(stats, parseFloat(targetRevenue));
       setAiResponse(analysis);
     } catch (error) {
+      console.error('Failed to analyze data', error);
       toast.error('Failed to analyze data');
     } finally {
       setIsAnalyzing(false);

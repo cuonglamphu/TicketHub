@@ -8,37 +8,27 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { pixelBorder, pixelFont } from "@/lib/utils";
 import { CreateTicketDto, TicketFormProps, Type } from '@/types/ticket';
-import { AlertDialog, AlertDialogContent, AlertDialogAction, AlertDialogCancel, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
 import { typeService } from '@/services/typeService';
 import { ticketService } from '@/services/ticketService';
 import { toast } from 'react-hot-toast';
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Add this interface near the top of the file or in your types file
-interface TypeFormDialogProps {
-    isOpen: boolean;
-    onClose: () => void;
-    type: Type | null;
-    onSubmit: (type: Type) => void;
-}
 
-export function TicketForm({ isOpen, onClose, onSubmit, ticket, events, categories }: TicketFormProps) {
+export function TicketForm({ isOpen, onClose, ticket, events, categories }: TicketFormProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedEvent, setSelectedEvent] = useState<string>('');
-  const [selectedType, setSelectedType] = useState<Type | null>(null);
+  const [, setSelectedType] = useState<Type | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isTypeFormOpen, setIsTypeFormOpen] = useState(false);
   const [ticketQty, setTicketQty] = useState<number>(0);
   const [ticketPrice, setTicketPrice] = useState<number>(0);
-  const [types, setTypes] = useState<Type[]>([]);
+  const [, setTypes] = useState<Type[]>([]);
   const [isFormLoading, setIsFormLoading] = useState(true);
-  const [usedTypeIds, setUsedTypeIds] = useState<number[]>([]);
+  const [, setUsedTypeIds] = useState<number[]>([]);
   const [typeName, setTypeName] = useState('');
   const [typeDesc, setTypeDesc] = useState('');
   const [isEditingType, setIsEditingType] = useState(true);
-  const [isTypeValid, setIsTypeValid] = useState(false);
   const [typeNameError, setTypeNameError] = useState<string>('');
-  const [selectedTypeId, setSelectedTypeId] = useState<number | null>(null);
+  const [, setSelectedTypeId] = useState<number | null>(null);
 
   // Add useEffect to initialize form data when editing
   useEffect(() => {
@@ -145,12 +135,6 @@ export function TicketForm({ isOpen, onClose, onSubmit, ticket, events, categori
         toast.error('Failed to validate type name');
       }
     }
-  };
-
-  // Modify type name input handler to clear error when typing
-  const handleTypeNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTypeName(e.target.value);
-    setTypeNameError(''); // Clear error when user types
   };
 
   // Modified submit handler

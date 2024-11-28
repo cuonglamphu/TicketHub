@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { pixelBorder } from '@/lib/utils';
 
 interface CategoryFormProps {
   isOpen: boolean;
@@ -37,7 +36,7 @@ export function CategoryForm({ isOpen, onClose, category, onSubmit }: CategoryFo
         catName: category.catName,
         catSlug: category.catSlug,
         catDesc: category.catDesc,
-        catThumb: category.catThumb
+        catThumb: category.catThumb!
       });
     } else {
       setFormData({

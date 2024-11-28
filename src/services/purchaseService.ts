@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Sale, PurchaseTicketDto, PurchaseDisplay } from '@/types/purchase';
+import { Sale, PurchaseTicketDto, PurchaseDisplay, Purchase } from '@/types/purchase';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -25,8 +25,8 @@ export const purchaseService = {
   },
 
   // Helper function to format purchase data for display
-  formatPurchaseForDisplay: (sale: any): PurchaseDisplay[] => {
-    return sale.purchases.map((purchase: any, index: number) => {
+  formatPurchaseForDisplay: (sale: Sale): PurchaseDisplay[] => {
+    return sale.purchases.map((purchase: Purchase, index: number) => {
       const eventDateTime = new Date(purchase.eventTimeStart);
       const saleDateTime = new Date(sale.saleDate);
       

@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Filter, Music, MapPin, Calendar, DollarSign } from 'lucide-react';
-import Image from 'next/image';
+import { Search, Filter, Music, MapPin, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { Event } from '@/types/event';
 import { Category } from '@/types/category';
