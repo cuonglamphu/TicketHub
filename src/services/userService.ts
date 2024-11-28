@@ -1,7 +1,16 @@
 import axios from 'axios';
 import { User } from '@/types/user';
+import { UserFormData } from '@/components/admin/UserForm';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+type CreateUserData = UserFormData & {
+  userJoinDate: string;
+  totalTickets: number;
+  totalSpent: number;
+  status: string;
+  message: string;
+};
 
 export const userService = {
   async getAll(): Promise<User[]> {
@@ -14,13 +23,13 @@ export const userService = {
     return response.data;
   },
 
-  async create(user: Omit<User, 'userId'>): Promise<User> {
-    const response = await axios.post(`${API_URL}/user`, user);
+  create: async (userData: CreateUserData): Promise<User> => {
+    const response = await axios.post<User>(`${API_URL}/User`, userData);
     return response.data;
   },
 
-  async update(id: number, user: Partial<User>): Promise<User> {
-    const response = await axios.put(`${API_URL}/user/${id}`, user);
+  update: async (id: number, userData: Partial<UserFormData>): Promise<User> => {
+    const response = await axios.put<User>(`${API_URL}/User/${id}`, userData);
     return response.data;
   },
 

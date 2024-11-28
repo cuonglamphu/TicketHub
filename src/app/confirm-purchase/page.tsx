@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
@@ -23,7 +23,8 @@ interface ApiError {
     message: string;
 }
 
-export default function ConfirmPurchasePage() {
+// Tách phần logic sử dụng useSearchParams ra component riêng
+function PurchaseContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isProcessing, setIsProcessing] = useState(false);
@@ -289,5 +290,18 @@ export default function ConfirmPurchasePage() {
                 {renderProcessingState()}
             </AnimatePresence>
         </div>
+    );
+}
+
+// Component chính
+export default function ConfirmPurchasePage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen">
+                <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+        }>
+            <PurchaseContent />
+        </Suspense>
     );
 }

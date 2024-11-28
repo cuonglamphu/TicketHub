@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { Navbar } from "@/components/layout/Navbar"
 import { Modal } from "@/components/modals/Modal"
-import { EventDetailsModal } from "@/components/modals/EventDetailsModal"
 import { TicketPurchaseModal } from "@/components/modals/TicketPurchaseModal"
 import { HotEventCarousel } from "@/components/home/HotEventCarousel"
 import { eventService } from '@/services/eventService'
@@ -32,7 +31,6 @@ export default function HomePage() {
   const [isSignInOpen, setIsSignInOpen] = useState(false)
   const [isSignUpOpen, setIsSignUpOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState<RecommendedEvent>()
-  const [isEventDetailsOpen, setIsEventDetailsOpen] = useState(false)
   const [isTicketPurchaseOpen, setIsTicketPurchaseOpen] = useState(false)
   const [hotEventsList, setHotEventsList] = useState<RecommendedEvent[]>([])
   const [recommendedEventsList, setRecommendedEventsList] = useState([])
@@ -172,6 +170,15 @@ export default function HomePage() {
       setIsSignInOpen(true)
       return
     }
+    
+    // // Map the tickets to match TicketDisplay interface
+    // const mappedTickets: TicketDisplay[] = event.tickets ? event.tickets.map(ticket => ({
+    //   name: ticket.type?.typeName || 'Standard Ticket',
+    //   price: ticket.TicketPrice || ticket.ticket_price || 0,
+    //   quantity: ticket.TicketQty || ticket.ticket_qty || 0,
+    //   ticketId: ticket.TicketId || ticket.ticket_id || 0
+    // })) : []
+    
     setSelectedEvent(event)
     setIsTicketPurchaseOpen(true)
   }
@@ -370,15 +377,14 @@ export default function HomePage() {
         <SignUpForm onClose={() => setIsSignUpOpen(false)} />
       </Modal>
 
-      <EventDetailsModal
-        key={selectedEvent?.eveId}
-        event={selectedEvent}
-        isOpen={isEventDetailsOpen}
-        onClose={() => setIsEventDetailsOpen(false)}
-      />
       <TicketPurchaseModal
         key={selectedEvent?.eveId}
-        ticketTypes={selectedEvent?.tickets || []}
+        ticketTypes={selectedEvent?.tickets ? selectedEvent.tickets.map(ticket => ({
+          name: ticket.type?.typeName || 'Standard Ticket',
+          price: ticket.ticketPrice || ticket.ticket_price || 0,
+          quantity: ticket.ticketQty || ticket.ticket_qty || 0,
+          ticketId: ticket.ticketId || ticket.ticket_id || 0
+        })) : []}
         event={selectedEvent} 
         isOpen={isTicketPurchaseOpen}
         onClose={() => setIsTicketPurchaseOpen(false)}

@@ -129,7 +129,7 @@ export default function TicketsPage() {
   const handleSubmit = async (formData: CreateTicketDto) => {
     try {
       if (editingTicket) {
-        await ticketService.update(editingTicket.TicketId, formData);
+        await ticketService.update(editingTicket.ticketId, formData);
       } else {
         await ticketService.create(formData);
       }

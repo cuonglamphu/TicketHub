@@ -9,19 +9,21 @@ import { User } from "@/types/user";
 import { useState, useEffect } from "react";
 import { pixelBorder, pixelFont } from "@/lib/utils";
 
+export type UserFormData = {
+  userName: string;
+  userEmail: string;
+  userPassword?: string;
+  userRole: 'USER' | 'ADMIN';
+  firstName?: string;
+  lastName?: string;
+};
+
 interface UserFormProps {
   isOpen: boolean;
   onClose: () => void;
   user: User | null;
   onSubmit: (data: UserFormData) => Promise<void>;
 }
-
-type UserFormData = {
-  userName: string;
-  userEmail: string;
-  userPassword: string;
-  userRole: 'USER' | 'ADMIN';
-};
 
 export function UserForm({ isOpen, onClose, user, onSubmit }: UserFormProps) {
   const [formData, setFormData] = useState<UserFormData>({

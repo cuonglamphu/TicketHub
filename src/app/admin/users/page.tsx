@@ -6,7 +6,7 @@ import { Users } from 'lucide-react';
 import { Card } from "@/components/ui/card";
 import { pixelBorder, pixelFont } from "@/lib/utils";
 import { User } from '@/types/user';
-import { UserForm } from '@/components/admin/UserForm';
+import { UserForm, UserFormData } from '@/components/admin/UserForm';
 import { userService } from '@/services/userService';
 import { toast } from 'sonner';
 
@@ -32,9 +32,17 @@ export default function UsersPage() {
     }
   };
 
-  const handleCreateUser = async (userData: Omit<User, 'userId'>) => {
+  const handleCreateUser = async (formData: UserFormData) => {
     try {
-      await userService.create(userData);
+      const newUserData = {
+        ...formData,
+        userJoinDate: new Date().toISOString(),
+        totalTickets: 0,
+        totalSpent: 0,
+        status: 'active',
+        message: ''
+      };
+      await userService.create(newUserData);
       toast.success('User created successfully');
       fetchUsers();
       setIsUserFormOpen(false);
@@ -44,9 +52,9 @@ export default function UsersPage() {
     }
   };
 
-  const handleUpdateUser = async (id: number, userData: Partial<User>) => {
+  const handleUpdateUser = async (id: number, formData: UserFormData) => {
     try {
-      await userService.update(id, userData);
+      await userService.update(id, formData);
       toast.success('User updated successfully');
       fetchUsers();
       setIsUserFormOpen(false);
@@ -163,10 +171,13 @@ export default function UsersPage() {
           setSelectedUser(null);
         }}
         user={selectedUser}
-        onSubmit={selectedUser ? 
-          (data) => handleUpdateUser(selectedUser.userId, data) : 
-          handleCreateUser
-        }
+        onSubmit={async (data: UserFormData) => {
+          if (selectedUser) {
+            await handleUpdateUser(selectedUser.userId, data);
+          } else {
+            await handleCreateUser(data);
+          }
+        }}
       />
     </div>
   );

@@ -2,25 +2,25 @@ import { Category } from './category';
 import { Event as CustomEvent } from './event';
 
 export interface TicketDisplay {
+    ticketId: number;
     name: string;
     price: number;
     quantity: number;
-    ticketId: number;
 }
 
 export interface Type {
-    typeId?: number;
+    typeId: number;
     typeName: string;
     typeDesc: string;
     eventId: number;
 }
 
 export interface Ticket {
-    TicketId: number;
-    TicketPrice: number;
-    TicketQty: number;
-    EveId: number;
-    TypeId: number;
+    ticketId: number;
+    ticketPrice: number;
+    ticketQty: number;
+    eveId: number;
+    typeId: number;
     event?: {
         eveId: number;
         eveName: string;
@@ -84,5 +84,16 @@ export interface TicketPurchase {
             typeId: number;
             typeName: string;
         };
+    };
+}
+
+export type TicketDisplayArray = Array<TicketDisplay>;
+
+export function convertToTicketDisplay(ticket: Ticket): TicketDisplay {
+    return {
+        name: ticket.type?.typeName || 'Standard Ticket',
+        price: ticket.ticketPrice || ticket.ticket_price || 0,
+        quantity: ticket.ticketQty || ticket.ticket_qty || 0,
+        ticketId: ticket.ticketId || ticket.ticket_id || 0
     };
 } 

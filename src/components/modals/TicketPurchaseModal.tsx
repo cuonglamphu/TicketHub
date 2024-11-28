@@ -1,40 +1,46 @@
 import { useState, useEffect } from "react";
 import { RecommendedEvent } from "@/types/event";
-import { TicketDisplay } from "@/types/ticket";
+// import { TicketDisplay } from "@/types/ticket";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
+
+
+interface TicketDisplay {
+    ticketId: number;
+    name: string;
+    price: number;
+    quantity: number;
+}
 interface TicketPurchaseModalProps {
-    event: RecommendedEvent | undefined;
     isOpen: boolean;
     onClose: () => void;
-    selectedTicketType?: TicketDisplay;
-    ticketTypes: TicketDisplay[];
+    event?: RecommendedEvent;
+    ticketTypes: readonly TicketDisplay[];
 }
 
 const pixelBorder = "border-[4px] border-black shadow-[4px_4px_0_0_#000000]";
 const pixelFont = { fontFamily: "'VT323', monospace" };
 
 export function TicketPurchaseModal({
-    event,
     isOpen,
     onClose,
-    selectedTicketType,
-    ticketTypes = []
+    event,
+    ticketTypes
 }: TicketPurchaseModalProps) {
     const [quantity, setQuantity] = useState(1);
-    const [selectedType, setSelectedType] = useState<TicketDisplay | undefined>(selectedTicketType);
+    const [selectedType, setSelectedType] = useState<TicketDisplay | undefined>(undefined);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (isOpen) {
             setQuantity(1);
-            setSelectedType(selectedTicketType);
+            setSelectedType(undefined);
             setError(null);
         }
-    }, [isOpen, selectedTicketType]);
+    }, [isOpen]);
 
     if (!isOpen) return null;
     if (!event) {
@@ -70,7 +76,7 @@ export function TicketPurchaseModal({
     };
 
     const handleTypeSelect = (value: string) => {
-        const newType = ticketTypes.find(t => t.name === value);
+        const newType = ticketTypes.find((t: TicketDisplay) => t.name === value);
         setSelectedType(newType);
         setQuantity(1);
         setError(null);
@@ -129,20 +135,20 @@ export function TicketPurchaseModal({
                 )}
 
                 {/* Ticket Type Selection */}
-                {!selectedTicketType && ticketTypes.length > 0 && (
+                {ticketTypes.length > 0 && (
                     <div className="mb-4">
                         <label className="text-white mb-2 block" style={pixelFont}>
                             Select Ticket
                         </label>
                         <Select
-                            value={selectedType?.name ?? ""}
+                            value={selectedType?.name || ""}
                             onValueChange={handleTypeSelect}
                         >
                             <SelectTrigger className={`w-full bg-white ${pixelBorder}`}>
                                 <SelectValue placeholder="Choose ticket type" />
                             </SelectTrigger>
                             <SelectContent>
-                                {ticketTypes.map((type) => (
+                                {Array.isArray(ticketTypes) && ticketTypes.map((type: TicketDisplay) => (
                                     <SelectItem 
                                         key={type.ticketId} 
                                         value={type.name}

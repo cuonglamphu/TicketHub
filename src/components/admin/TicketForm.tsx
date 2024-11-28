@@ -39,7 +39,7 @@ export function TicketForm({ isOpen, onClose, ticket, events, categories }: Tick
           const eventCategory = events?.find(e => e.eveId === ticket.eveId)?.category?.catId?.toString();
           setSelectedCategory(eventCategory || '');
           setSelectedEvent(ticket.eveId?.toString() || '');
-          setSelectedType(ticket.type || null);
+          setSelectedType(ticket.type as Type || null);
           setSelectedTypeId(ticket.typeId || null);
           setTicketQty(ticket.ticketQty || 0);
           setTicketPrice(ticket.ticketPrice || 0);
@@ -383,7 +383,6 @@ export function TicketForm({ isOpen, onClose, ticket, events, categories }: Tick
                   <Label className="text-lg font-bold">Selected Ticket Type</Label> 
                   <div className="mt-2 p-3 bg-gray-50 rounded">
                     <p className="font-medium text-lg">{ticket.type.typeName}</p>
-                    <p className="text-gray-600 mt-1">{ticket.type.typeDesc}</p>
                   </div>
                 </div>
               )}

@@ -49,7 +49,7 @@ export function EventForm({ isOpen, onClose, onSubmit, event }: EventFormProps) 
     const fetchCategories = async () => {
       try {
         const data = await categoryService.getAll();
-        setCategories(data);
+        setCategories(data as Category[]);
       } catch (error) {
         console.error('Error fetching categories:', error);
       }

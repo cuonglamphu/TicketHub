@@ -62,15 +62,25 @@ export const ticketService = {
   },
 
   purchaseTicket: async ({ userId, data }: PurchaseRequest): Promise<PurchaseResponse> => {
-    const response = await axios.post(
-        `${API_URL}/Ticket/purchase?userId=${userId}`,
-        data,
-        {
-            headers: {
-                'Content-Type': 'application/json',
+    // Validate required fields
+    if (!userId || !data.ticketId) {
+        throw new Error('Missing required fields: userId or ticketId');
+    }
+
+    try {
+        const response = await axios.post(
+            `${API_URL}/Ticket/purchase?userId=${userId}`,
+            data,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                }
             }
-        }
-    );
-    return response.data;
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Purchase ticket error:', error);
+        throw error;
+    }
   },
 };

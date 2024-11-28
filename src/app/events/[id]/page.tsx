@@ -7,7 +7,7 @@ import { Modal } from "@/components/modals/Modal";
 import SignInForm from '@/components/home/SignInForm';
 import { TicketPurchaseModal } from "@/components/modals/TicketPurchaseModal";
 import { eventService } from '@/services/eventService';
-import { TicketDisplay, Ticket as TicketType, Type } from '@/types/ticket';
+import {  TicketDisplay, Type } from '@/types/ticket';
 import { ticketService } from '@/services/ticketService';
 import { typeService } from '@/services/typeService';
 import { Event } from '@/types/event';
@@ -41,31 +41,42 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
   const fetchTicketData = useCallback(async () => {
     try {
-      const tickets: TicketType[] = await ticketService.getByEventId(Number(resolvedParams.id));
+      const tickets = await ticketService.getByEventId(Number(resolvedParams.id));
       console.log("Fetched tickets:", tickets);
 
       const typeMap = new Map<number, Type>();
       
       for (const ticket of tickets) {
-        const typeId = ticket.TypeId || ticket.typeId;
-        if (!typeMap.has(typeId)) {
-          const typeInfo = await typeService.getById(typeId);
-          typeMap.set(typeId, typeInfo);
+        const typeId = ticket.typeId;
+        console.log("Processing ticket with typeId:", typeId);
+        
+        if (typeId && !typeMap.has(typeId)) {
+          try {
+            const typeInfo = await typeService.getById(typeId);
+            console.log("Fetched type info:", typeInfo);
+            if (typeInfo) {
+              typeMap.set(typeId, typeInfo);
+            }
+          } catch (error) {
+            console.error(`Error fetching type info for ID ${typeId}:`, error);
+          }
         }
       }
 
       const displays: TicketDisplay[] = tickets.map(ticket => {
-        const typeId = ticket.TypeId || ticket.typeId;
-        const typeInfo = typeMap.get(typeId);
+        const typeId = ticket.typeId;
+        const typeInfo = typeId ? typeMap.get(typeId) : undefined;
+        console.log("Mapping ticket:", ticket, "with type:", typeInfo);
         
         return {
-          ticketId: ticket.TicketId || ticket.ticketId,
-          name: typeInfo?.typeName || 'Unknown',
-          price: ticket.TicketPrice || ticket.ticketPrice || 0,
-          quantity: ticket.TicketQty || ticket.ticketQty || 0
+          ticketId: ticket.ticketId,
+          name: typeInfo?.typeName || 'Standard Ticket',
+          price: ticket.ticketPrice,
+          quantity: ticket.ticketQty
         };
       });
 
+      console.log("Final displays:", displays);
       setTicketDisplays(displays);
     } catch (error) {
       console.error('Error fetching ticket data:', error);
