@@ -30,6 +30,8 @@ function PurchaseContent() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [purchaseStatus, setPurchaseStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
     const [purchaseDetails, setPurchaseDetails] = useState<Purchase | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
 
     useEffect(() => {
         const details: Purchase = {
@@ -88,7 +90,16 @@ function PurchaseContent() {
 
         } catch (error: unknown) {
             setPurchaseStatus('error');
-            console.error('Purchase failed:', error);
+            const err = error as { response?: { status: number; data: string } };
+            
+            if(err.response?.status === 400 && err.response?.data === "This transaction is detected as fraud.")  {
+                console.error('Purchase failed:', error);
+                setErrorMessage("This transaction is detected as fraud.");
+            } else {
+                console.error('Purchase failed:', error);
+                setErrorMessage("Purchase failed. Please try again.");
+            }
+        
             
             // Type guard để kiểm tra error có phải là ApiError không
             const isApiError = (error: unknown): error is ApiError => {
@@ -226,6 +237,7 @@ function PurchaseContent() {
                             <XCircle className="h-16 w-16 text-white mb-4" />
                         </motion.div>
                         <p className="text-white text-xl" style={pixelFont}>Purchase Failed</p>
+                        {errorMessage && <p className="text-white mt-2" style={pixelFont}>{errorMessage}</p>}
                         <Button 
                             onClick={() => setPurchaseStatus('idle')}
                             className="mt-4 bg-white text-red-500 hover:bg-gray-100"

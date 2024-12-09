@@ -15,6 +15,7 @@ type CreateUserData = UserFormData & {
 export const userService = {
   async getAll(): Promise<User[]> {
     const response = await axios.get(`${API_URL}/user`);
+    console.log(response.data);
     return response.data;
   },
 

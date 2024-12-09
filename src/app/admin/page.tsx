@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { notFound } from 'next/navigation';
-import { getStoredUser } from '@/utils/auth';
 import { pixelBorder, pixelFont } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Bar, Doughnut } from 'react-chartjs-2';
@@ -39,6 +37,10 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import { saleService } from '@/services/saleService';
+import { userService } from '@/services/userService';
+import { Sale } from '@/types/sale';
+import { User } from '@/types/user';
 
 ChartJS.register(
   CategoryScale,
@@ -57,47 +59,118 @@ export default function AdminDashboard() {
   const [targetRevenue, setTargetRevenue] = useState('');
   const [aiResponse, setAiResponse] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
 
-  const stats = [
-    { 
-      name: 'Total Sales', 
-      value: '12,000.000.000đ',
-      trend: '+12.5%',
-      icon: DollarSign,
-      isPositive: true,
-      details: 'Up from last month'
-    },
-    { 
-      name: 'Active Events', 
-      value: '23',
-      trend: '+5%',
-      icon: Calendar,
-      isPositive: true,
-      details: '15 upcoming'
-    },
-    { 
-      name: 'Total Users', 
-      value: '1,234',
-      trend: '-2.3%',
-      icon: Users,
-      isPositive: false,
-      details: 'Needs attention'
-    },
-    { 
-      name: 'Tickets Sold', 
-      value: '5,678',
-      trend: '+8.7%',
-      icon: TrendingUp,
-      isPositive: true,
-      details: '500 this week'
-    },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [salesData, usersData] = await Promise.all([
+          saleService.getAll(),
+          userService.getAll()
+        ]);
+        setSales(salesData);
+        setUsers(usersData);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      }
+    };
+    fetchData();
+  }, []);
 
-  const performanceMetrics = [
-    { label: 'Best Selling Event', value: 'Summer Festival', icon: Award },
-    { label: 'Peak Sales Time', value: '6:00 PM - 8:00 PM', icon: Target },
-    { label: 'Lowest Performing', value: 'Tech Workshop', icon: TrendingDown },
-  ];
+  const calculateStats = () => {
+    const totalSales = sales.reduce((sum, sale) => sum + sale.saleTotal, 0);
+    const totalTickets = users.reduce((sum, user) => sum + user.totalTickets, 0);
+    const fraudUsers = users.filter(user => user.fraud === true).length;
+
+    return [
+      { 
+        name: 'Total Sales', 
+        value: `${totalSales.toLocaleString()}đ`,
+        trend: '+12.5%',
+        icon: DollarSign,
+        isPositive: true,
+        details: 'Up from last month'
+      },
+      { 
+        name: 'Active Events', 
+        value: sales.length.toString(),
+        trend: '+5%',
+        icon: Calendar,
+        isPositive: true,
+        details: '15 upcoming'
+      },
+      { 
+        name: 'Total Users', 
+        value: users.length.toString(),
+        trend: '-2.3%',
+        icon: Users,
+        isPositive: false,
+        details: `Including ${fraudUsers} fraud users`
+      },
+      { 
+        name: 'Tickets Sold', 
+        value: totalTickets.toString(),
+        trend: '+8.7%',
+        icon: TrendingUp,
+        isPositive: true,
+        details: '500 this week'
+      },
+    ];
+  };
+
+  const stats = calculateStats();
+
+  const calculatePerformanceMetrics = () => {
+    // Group sales by event and calculate total revenue per event
+    const eventPerformance = sales.reduce((acc, sale) => {
+      sale.purchases.forEach(purchase => {
+        const eventName = purchase.eventName;
+        acc[eventName] = (acc[eventName] || 0) + purchase.price;
+      });
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Find best and worst performing events
+    const events = Object.entries(eventPerformance);
+    const bestEvent = events.length ? 
+      events.reduce((a, b) => a[1] > b[1] ? a : b)[0] : 
+      'No events';
+    const worstEvent = events.length ? 
+      events.reduce((a, b) => a[1] < b[1] ? a : b)[0] : 
+      'No events';
+
+    // Calculate peak sales time (assuming saleDate includes time)
+    const hourCounts = sales.reduce((acc, sale) => {
+      const hour = new Date(sale.saleDate).getHours();
+      acc[hour] = (acc[hour] || 0) + 1;
+      return acc;
+    }, {} as Record<number, number>);
+
+    const peakHour = Object.entries(hourCounts).length ?
+      Number(Object.entries(hourCounts).reduce((a, b) => a[1] > b[1] ? a : b)[0]) :
+      0;
+
+    return [
+      { 
+        label: 'Best Selling Event', 
+        value: bestEvent, 
+        icon: Award 
+      },
+      { 
+        label: 'Peak Sales Time', 
+        value: `${peakHour}:00 - ${peakHour + 2}:00`, 
+        icon: Target 
+      },
+      { 
+        label: 'Lowest Performing', 
+        value: worstEvent, 
+        icon: TrendingDown 
+      },
+    ];
+  };
+
+  const performanceMetrics = calculatePerformanceMetrics();
 
   const handleAiAnalysis = async () => {
     setIsAnalyzing(true);
@@ -187,13 +260,6 @@ export default function AdminDashboard() {
     cutout: '70%',
     radius: '90%'
   };
-
-  useEffect(() => {
-    const user = getStoredUser();
-    if (!user || user.userRole !== 'admin') {
-      notFound();
-    }
-  }, []);
 
   return (
     <div className="space-y-6">

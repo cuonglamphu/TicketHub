@@ -10,6 +10,7 @@ export interface User {
   totalSpent: number;
   status: string;
   message: string;
+  fraud?: boolean;
 }
 
 export type UserFormProps = {

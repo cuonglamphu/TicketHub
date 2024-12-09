@@ -77,41 +77,62 @@ export default function UsersPage() {
     }
   };
 
-  type Column = {
-    key: keyof User;
+  type Column<T> = {
+    key: keyof T;
     label: string;
     sortable?: boolean;
-    formatter?: (value: string | number | Date) => string;
+    formatter?: (value: string | number | boolean | undefined) => string;
   };
   
-  const columns: Column[] = [
-    { key: 'userName', label: 'Name', sortable: true },
-    { key: 'userEmail', label: 'Email', sortable: true },
-    { key: 'userRole', label: 'Role', sortable: true },
+  const columns: Column<User>[] = [
+    { 
+      key: 'userName', 
+      label: 'Name', 
+      sortable: true,
+      formatter: (value: string | number | boolean | undefined) => String(value)
+    },
+    { 
+      key: 'userEmail', 
+      label: 'Email', 
+      sortable: true,
+      formatter: (value: string | number | boolean | undefined) => String(value)
+    },
+    { 
+      key: 'userRole', 
+      label: 'Role', 
+      sortable: true,
+      formatter: (value: string | number | boolean | undefined) => String(value)
+    },
     { 
       key: 'userJoinDate', 
       label: 'Join Date', 
       sortable: true,
-      formatter: (value: string | number | Date) => new Date(value).toLocaleDateString()
+      formatter: (value: string | number | boolean | undefined) => 
+        value ? new Date(String(value)).toLocaleDateString() : ''
     },
     { 
       key: 'totalTickets', 
       label: 'Tickets',
       sortable: true,
-      formatter: (value: string | number | Date) => value.toString()
+      formatter: (value: string | number | boolean | undefined) => String(value || 0)
     },
     { 
       key: 'totalSpent', 
       label: 'Total Spent', 
       sortable: true,
-      formatter: (value: string | number | Date) => {
-        if (typeof value === 'number') {
-          return `$${value.toFixed(2)}`;
-        }
-        return `$0.00`;
+      formatter: (value: string | number | boolean | undefined) => {
+        const numValue = Number(value);
+        return isNaN(numValue) ? '$0.00' : `$${numValue.toFixed(2)}`;
       }
     },
-  ] as const;
+    { 
+      key: 'fraud', 
+      label: 'Status', 
+      sortable: true,
+      formatter: (value: string | number | boolean | undefined) => 
+        value === true ? '⚠️ Fraud' : 'Normal'
+    }
+  ];
 
   const stats = [
     { label: 'Total Users', value: users.length.toString() },

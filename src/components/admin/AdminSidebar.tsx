@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { cn, pixelFont } from "@/lib/utils";
 import { Button } from "../ui/button";
-import Image from "next/image";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
@@ -39,16 +38,6 @@ export function AdminSidebar() {
         isCollapsed ? "w-[80px]" : "w-[250px]"
       )}
     >
-      {/* Logo Section */}
-      <div className="p-4 flex justify-center items-center border-b-4 border-black">
-        <Image
-          src="/micle.gif"
-          alt="Logo"
-          width={isCollapsed ? 40 : 120}
-          height={isCollapsed ? 40 : 40}
-          className="transition-all duration-300"
-        />
-      </div>
 
       {/* Toggle Button */}
       <Button
